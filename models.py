@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from db import Base
 
 # =================== GERMOPLASMA ===================
+
 class RazaMaiz(Base):
 	__tablename__ = "raza_maiz"
 	__table_args__ = {"schema": "catalogo"}
@@ -69,6 +70,24 @@ class SistemaManejo(Base):
 	created_at = Column(TIMESTAMP)
 	updated_at = Column(TIMESTAMP)
 
+class SistemaCultivo(Base):
+	__tablename__ = "sistema_cultivo"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class MetodoAlmacenamiento(Base):
+	__tablename__ = "metodo_almacenamiento"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
 class TipoFenotipo(Base):
 	__tablename__ = "tipo_fenotipo"
 	__table_args__ = {"schema": "catalogo"}
@@ -76,6 +95,170 @@ class TipoFenotipo(Base):
 	nombre = Column(String(100), unique=True, nullable=False)
 	unidad = Column(String(50))
 	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class EtapaFenologica(Base):
+	__tablename__ = "etapa_fenologica"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(30), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class TipoRitualAgricola(Base):
+	__tablename__ = "tipo_ritual_agricola"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(60), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class TipoNarrativaOral(Base):
+	__tablename__ = "tipo_narrativa_oral"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class CategoriaSaberAgricola(Base):
+	__tablename__ = "categoria_saber_agricola"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(80), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class Ocasion(Base):
+	__tablename__ = "ocasion"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(80), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class MecanismoTransmision(Base):
+	__tablename__ = "mecanismo_transmision"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class VinculoMaiz(Base):
+	__tablename__ = "vinculo_maiz"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class TipoProductoDron(Base):
+	__tablename__ = "tipo_producto_dron"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class FormatoArchivo(Base):
+	__tablename__ = "formato_archivo"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(20), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class TipoCapaSIG(Base):
+	__tablename__ = "tipo_capa_sig"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class FuenteCaptura(Base):
+	__tablename__ = "fuente_captura"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class FuenteInformacion(Base):
+	__tablename__ = "fuente_informacion"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(100), unique=True, nullable=False)
+	descripcion = Column(Text)
+	tipo = Column(String(30))
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class OrigenSemilla(Base):
+	__tablename__ = "origen_semilla"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+class TipoAmenaza(Base):
+	__tablename__ = "tipo_amenaza"
+	__table_args__ = {"schema": "catalogo"}
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String(80), unique=True, nullable=False)
+	descripcion = Column(Text)
+	created_at = Column(TIMESTAMP)
+	updated_at = Column(TIMESTAMP)
+
+# =================== AMBIENTAL ===================
+class ClaseUsoSuelo(Base):
+    __tablename__ = "clase_uso_suelo"
+    __table_args__ = {"schema": "catalogo"}
+    id = Column(Integer, primary_key=True, index=True)
+    codigo = Column(String(20), unique=True, nullable=False)
+    nombre = Column(String(100), nullable=False)
+    categoria_general = Column(String(100))
+    descripcion = Column(Text)
+    relevante_maiz = Column(Boolean, default=False)
+    activo = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
+
+class VariableAmbiental(Base):
+    __tablename__ = "variable_ambiental"
+    __table_args__ = {"schema": "catalogo"}
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), unique=True, nullable=False)
+    unidad = Column(String(50))
+    valor_min = Column(DECIMAL)
+    valor_max = Column(DECIMAL)
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
+
+class TipoEventoClimatico(Base):
+    __tablename__ = "tipo_evento_climatico"
+    __table_args__ = {"schema": "catalogo"}
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), unique=True, nullable=False)
+    severidad_base = Column(SmallInteger)
+    descripcion = Column(Text)
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
 
 # =================== TERRITORIAL ===================
 class Estado(Base):
@@ -164,76 +347,6 @@ class Colonia(Base):
 	updated_at = Column(TIMESTAMP)
 	localidad = relationship("Localidad", back_populates="colonias")
 
-# =================== AMBIENTAL ===================
-class ClaseUsoSuelo(Base):
-	__tablename__ = "clase_uso_suelo"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	codigo = Column(String(20), unique=True, nullable=False)
-	nombre = Column(String(100), nullable=False)
-	categoria_general = Column(String(100))
-	descripcion = Column(Text)
-	relevante_maiz = Column(Boolean, default=False)
-	activo = Column(Boolean, default=True)
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
-
-class TipoEventoClimatico(Base):
-	__tablename__ = "tipo_evento_climatico"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	nombre = Column(String(100), unique=True, nullable=False)
-	severidad_base = Column(SmallInteger)
-	descripcion = Column(Text)
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
-
-class VariableAmbiental(Base):
-	__tablename__ = "variable_ambiental"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	nombre = Column(String(100), unique=True, nullable=False)
-	unidad = Column(String(50))
-	valor_min = Column(DECIMAL)
-	valor_max = Column(DECIMAL)
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
-
-# =================== SOCIOCULTURAL ===================
-class TipoProductor(Base):
-	__tablename__ = "tipo_productor"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	nombre = Column(String(100), unique=True, nullable=False)
-	descripcion = Column(Text)
-
-class Lengua(Base):
-	__tablename__ = "lengua"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	nombre = Column(String(100), unique=True, nullable=False)
-	nombre_original = Column(String(100))
-	familia_linguistica = Column(String(100))
-	variante = Column(String(100))
-	clave_inali = Column(String(20))
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
-	pueblos = relationship("PuebloOriginario", back_populates="lengua")
-
-class PuebloOriginario(Base):
-	__tablename__ = "pueblo_originario"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	nombre = Column(String(150), nullable=False)
-	nombre_propio = Column(String(150))
-	lengua_id = Column(Integer, ForeignKey("catalogo.lengua.id"))
-	region_historica = Column(String(200))
-	municipios_presencia = Column(Text)
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
-	lengua = relationship("Lengua", back_populates="pueblos")
-
-# =================== TRAZABILIDAD ===================
 class OrigenMuestra(Base):
 	__tablename__ = "origen_muestra"
 	__table_args__ = {"schema": "catalogo"}
@@ -242,3 +355,37 @@ class OrigenMuestra(Base):
 	descripcion = Column(Text)
 	created_at = Column(TIMESTAMP)
 	updated_at = Column(TIMESTAMP)
+
+# =================== SOCIOCULTURAL ===================
+class TipoProductor(Base):
+    __tablename__ = "tipo_productor"
+    __table_args__ = {"schema": "catalogo"}
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), unique=True, nullable=False)
+    descripcion = Column(Text)
+
+class Lengua(Base):
+    __tablename__ = "lengua"
+    __table_args__ = {"schema": "catalogo"}
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), unique=True, nullable=False)
+    nombre_original = Column(String(100))
+    familia_linguistica = Column(String(100))
+    variante = Column(String(100))
+    clave_inali = Column(String(20))
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
+    pueblos = relationship("PuebloOriginario", back_populates="lengua")
+
+class PuebloOriginario(Base):
+    __tablename__ = "pueblo_originario"
+    __table_args__ = {"schema": "catalogo"}
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(150), nullable=False)
+    nombre_propio = Column(String(150))
+    lengua_id = Column(Integer, ForeignKey("catalogo.lengua.id"))
+    region_historica = Column(String(200))
+    municipios_presencia = Column(Text)
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
+    lengua = relationship("Lengua", back_populates="pueblos")

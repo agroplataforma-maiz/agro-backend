@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-
 # =================== GERMOPLASMA ===================
 class RazaMaizBase(BaseModel):
 	nombre: str
@@ -10,15 +9,12 @@ class RazaMaizBase(BaseModel):
 	region_origen: Optional[str] = None
 	tipo_ciclo: Optional[str] = None
 	es_nativa: Optional[bool] = True
-
 class RazaMaizCreate(RazaMaizBase):
 	pass
-
 class RazaMaiz(RazaMaizBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -26,15 +22,12 @@ class ColorGranoBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
 	es_nativo: Optional[bool] = True
-
 class ColorGranoCreate(ColorGranoBase):
 	pass
-
 class ColorGrano(ColorGranoBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -42,25 +35,20 @@ class EstadoConservacionBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
 	nivel_riesgo: Optional[int] = None
-
 class EstadoConservacionCreate(EstadoConservacionBase):
 	pass
-
 class EstadoConservacion(EstadoConservacionBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
 class UsoMaizBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
-
 class UsoMaizCreate(UsoMaizBase):
 	pass
-
 class UsoMaiz(UsoMaizBase):
 	id: int
 	class Config:
@@ -69,10 +57,8 @@ class UsoMaiz(UsoMaizBase):
 # =================== AGRONÓMICO ===================
 class TipoPracticaBase(BaseModel):
 	nombre: str
-
 class TipoPracticaCreate(TipoPracticaBase):
 	pass
-
 class TipoPractica(TipoPracticaBase):
 	id: int
 	class Config:
@@ -82,10 +68,8 @@ class PracticaAgricolaBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
 	tipo_id: Optional[int] = None
-
 class PracticaAgricolaCreate(PracticaAgricolaBase):
 	pass
-
 class PracticaAgricola(PracticaAgricolaBase):
 	id: int
 	class Config:
@@ -95,15 +79,36 @@ class SistemaManejoBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
 	es_tradicional: Optional[bool] = None
-
 class SistemaManejoCreate(SistemaManejoBase):
 	pass
-
 class SistemaManejo(SistemaManejoBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
+	class Config:
+		from_attributes = True
+
+class SistemaCultivoBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class SistemaCultivoCreate(SistemaCultivoBase):
+	pass
+class SistemaCultivo(SistemaCultivoBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class MetodoAlmacenamientoBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class MetodoAlmacenamientoCreate(MetodoAlmacenamientoBase):
+	pass
+class MetodoAlmacenamiento(MetodoAlmacenamientoBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
 	class Config:
 		from_attributes = True
 
@@ -111,12 +116,24 @@ class TipoFenotipoBase(BaseModel):
 	nombre: str
 	unidad: Optional[str] = None
 	descripcion: Optional[str] = None
-
 class TipoFenotipoCreate(TipoFenotipoBase):
 	pass
-
 class TipoFenotipo(TipoFenotipoBase):
 	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class EtapaFenologicaBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class EtapaFenologicaCreate(EtapaFenologicaBase):
+	pass
+class EtapaFenologica(EtapaFenologicaBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
 	class Config:
 		from_attributes = True
 
@@ -125,15 +142,12 @@ class EstadoBase(BaseModel):
 	clave_inegi: str
 	nombre: str
 	abreviatura: Optional[str] = None
-
 class EstadoCreate(EstadoBase):
 	pass
-
 class Estado(EstadoBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -148,15 +162,12 @@ class MunicipioBase(BaseModel):
 	latitud_centroide: Optional[float] = None
 	longitud_centroide: Optional[float] = None
 	superficie_km2: Optional[float] = None
-
 class MunicipioCreate(MunicipioBase):
 	pass
-
 class Municipio(MunicipioBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -168,15 +179,12 @@ class ComunidadBase(BaseModel):
 	poblacion_total: Optional[int] = None
 	num_localidades: Optional[int] = None
 	fuente: Optional[str] = None
-
 class ComunidadCreate(ComunidadBase):
 	pass
-
 class Comunidad(ComunidadBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -196,15 +204,12 @@ class LocalidadBase(BaseModel):
 	municipio_id: int
 	comunidad_id: Optional[int] = None
 	fuente: Optional[str] = None
-
 class LocalidadCreate(LocalidadBase):
 	pass
-
 class Localidad(LocalidadBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -215,15 +220,12 @@ class ColoniaBase(BaseModel):
 	latitud: Optional[float] = None
 	longitud: Optional[float] = None
 	localidad_id: int
-
 class ColoniaCreate(ColoniaBase):
 	pass
-
 class Colonia(ColoniaBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -235,15 +237,12 @@ class ClaseUsoSueloBase(BaseModel):
 	descripcion: Optional[str] = None
 	relevante_maiz: Optional[bool] = None
 	activo: Optional[bool] = None
-
 class ClaseUsoSueloCreate(ClaseUsoSueloBase):
 	pass
-
 class ClaseUsoSuelo(ClaseUsoSueloBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -251,15 +250,12 @@ class TipoEventoClimaticoBase(BaseModel):
 	nombre: str
 	severidad_base: Optional[int] = None
 	descripcion: Optional[str] = None
-
 class TipoEventoClimaticoCreate(TipoEventoClimaticoBase):
 	pass
-
 class TipoEventoClimatico(TipoEventoClimaticoBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -268,15 +264,24 @@ class VariableAmbientalBase(BaseModel):
 	unidad: Optional[str] = None
 	valor_min: Optional[float] = None
 	valor_max: Optional[float] = None
-
 class VariableAmbientalCreate(VariableAmbientalBase):
 	pass
-
 class VariableAmbiental(VariableAmbientalBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
+	class Config:
+		from_attributes = True
+
+class TipoAmenazaBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class TipoAmenazaCreate(TipoAmenazaBase):
+	pass
+class TipoAmenaza(TipoAmenazaBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
 	class Config:
 		from_attributes = True
 
@@ -284,10 +289,8 @@ class VariableAmbiental(VariableAmbientalBase):
 class TipoProductorBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
-
 class TipoProductorCreate(TipoProductorBase):
 	pass
-
 class TipoProductor(TipoProductorBase):
 	id: int
 	class Config:
@@ -299,15 +302,12 @@ class LenguaBase(BaseModel):
 	familia_linguistica: Optional[str] = None
 	variante: Optional[str] = None
 	clave_inali: Optional[str] = None
-
 class LenguaCreate(LenguaBase):
 	pass
-
 class Lengua(LenguaBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
@@ -317,30 +317,168 @@ class PuebloOriginarioBase(BaseModel):
 	lengua_id: Optional[int] = None
 	region_historica: Optional[str] = None
 	municipios_presencia: Optional[str] = None
-
 class PuebloOriginarioCreate(PuebloOriginarioBase):
 	pass
-
 class PuebloOriginario(PuebloOriginarioBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
 
-# =================== TRAZABILIDAD ===================
+class TipoRitualAgricolaBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class TipoRitualAgricolaCreate(TipoRitualAgricolaBase):
+	pass
+class TipoRitualAgricola(TipoRitualAgricolaBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class TipoNarrativaOralBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class TipoNarrativaOralCreate(TipoNarrativaOralBase):
+	pass
+class TipoNarrativaOral(TipoNarrativaOralBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class CategoriaSaberAgricolaBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class CategoriaSaberAgricolaCreate(CategoriaSaberAgricolaBase):
+	pass
+class CategoriaSaberAgricola(CategoriaSaberAgricolaBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class OcasionBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class OcasionCreate(OcasionBase):
+	pass
+class Ocasion(OcasionBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class MecanismoTransmisionBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class MecanismoTransmisionCreate(MecanismoTransmisionBase):
+	pass
+class MecanismoTransmision(MecanismoTransmisionBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class VinculoMaizBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class VinculoMaizCreate(VinculoMaizBase):
+	pass
+class VinculoMaiz(VinculoMaizBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class TipoProductoDronBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class TipoProductoDronCreate(TipoProductoDronBase):
+	pass
+class TipoProductoDron(TipoProductoDronBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class FormatoArchivoBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class FormatoArchivoCreate(FormatoArchivoBase):
+	pass
+class FormatoArchivo(FormatoArchivoBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class TipoCapaSIGBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class TipoCapaSIGCreate(TipoCapaSIGBase):
+	pass
+class TipoCapaSIG(TipoCapaSIGBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class FuenteCapturaBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class FuenteCapturaCreate(FuenteCapturaBase):
+	pass
+class FuenteCaptura(FuenteCapturaBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class FuenteInformacionBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+	tipo: Optional[str] = None
+class FuenteInformacionCreate(FuenteInformacionBase):
+	pass
+class FuenteInformacion(FuenteInformacionBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
+class OrigenSemillaBase(BaseModel):
+	nombre: str
+	descripcion: Optional[str] = None
+class OrigenSemillaCreate(OrigenSemillaBase):
+	pass
+class OrigenSemilla(OrigenSemillaBase):
+	id: int
+	created_at: datetime | None
+	updated_at: datetime | None
+	class Config:
+		from_attributes = True
+
 class OrigenMuestraBase(BaseModel):
 	nombre: str
 	descripcion: Optional[str] = None
-
 class OrigenMuestraCreate(OrigenMuestraBase):
 	pass
-
 class OrigenMuestra(OrigenMuestraBase):
 	id: int
 	created_at: datetime | None
 	updated_at: datetime | None
-	# ...existing code...
 	class Config:
 		from_attributes = True
