@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from sqlalchemy.orm import Session
 from database import get_db
@@ -11,10 +11,17 @@ router = APIRouter()
 
 # -- EJE AMBIENTAL --
 
-# =================== TIPO EVENTO CLIMATICO ===================
-@router.get("/tipo_evento_climatico", response_model=list[schemas.TipoEventoClimatico])
-def listar_tipo_evento_climatico(db: Session = Depends(get_db)):
-    return db.query(TipoEventoClimatico).all()
+# =================== CATALOGO: TIPO EVENTO CLIMATICO ===================
+@router.get("/tipo_evento_climatico")
+def listar_tipo_evento_climatico(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(TipoEventoClimatico)
+    total = query.count()
+    tipos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": tipos}
 
 @router.get("/tipo_evento_climatico/{tipo_id}", response_model=schemas.TipoEventoClimatico)
 def obtener_tipo_evento_climatico(tipo_id: int, db: Session = Depends(get_db)):
@@ -51,10 +58,17 @@ def eliminar_tipo_evento_climatico(tipo_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== VARIABLE AMBIENTAL ===================
-@router.get("/variable_ambiental", response_model=list[schemas.VariableAmbiental])
-def listar_variable_ambiental(db: Session = Depends(get_db)):
-    return db.query(VariableAmbiental).all()
+# =================== CATALOGO: VARIABLE AMBIENTAL ===================
+@router.get("/variable_ambiental")
+def listar_variable_ambiental(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(VariableAmbiental)
+    total = query.count()
+    variables = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": variables}
 
 @router.get("/variable_ambiental/{variable_id}", response_model=schemas.VariableAmbiental)
 def obtener_variable_ambiental(variable_id: int, db: Session = Depends(get_db)):
@@ -91,10 +105,17 @@ def eliminar_variable_ambiental(variable_id: int, db: Session = Depends(get_db))
     db.commit()
     return {"ok": True}
 
-# =================== TIPO AMENAZA ===================
-@router.get("/tipo_amenaza", response_model=list[schemas.TipoAmenaza])
-def listar_tipo_amenaza(db: Session = Depends(get_db)):
-    return db.query(TipoAmenaza).all()
+# =================== CATALOGO:TIPO AMENAZA ===================
+@router.get("/tipo_amenaza")
+def listar_tipo_amenaza(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(TipoAmenaza)
+    total = query.count()
+    amenazas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": amenazas}
 
 @router.get("/tipo_amenaza/{amenaza_id}", response_model=schemas.TipoAmenaza)
 def obtener_tipo_amenaza(amenaza_id: int, db: Session = Depends(get_db)):
@@ -131,10 +152,17 @@ def eliminar_tipo_amenaza(amenaza_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== CLASE USO SUELO ===================
-@router.get("/clase_uso_suelo", response_model=list[schemas.ClaseUsoSuelo])
-def listar_clase_uso_suelo(db: Session = Depends(get_db)):
-    return db.query(ClaseUsoSuelo).all()
+# =================== CATALOGO: CLASE USO SUELO ===================
+@router.get("/clase_uso_suelo")
+def listar_clase_uso_suelo(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(ClaseUsoSuelo)
+    total = query.count()
+    clases = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": clases}
 
 @router.get("/clase_uso_suelo/{clase_id}", response_model=schemas.ClaseUsoSuelo)
 def obtener_clase_uso_suelo(clase_id: int, db: Session = Depends(get_db)):

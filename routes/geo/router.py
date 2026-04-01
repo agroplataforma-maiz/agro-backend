@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
 from database import get_db
@@ -11,10 +12,17 @@ router = APIRouter()
 
 # -- EJE TERRITORIAL --
 
-# =================== ESTADO ===================
-@router.get("/estado", response_model=list[schemas.Estado])
-def listar_estados(db: Session = Depends(get_db)):
-    return db.query(Estado).all()
+# =================== CATALOGO: ESTADO ===================
+@router.get("/estado")
+def listar_estados(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Estado)
+    total = query.count()
+    estados = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": estados}
 
 @router.get("/estado/{estado_id}", response_model=schemas.Estado)
 def obtener_estado(estado_id: int, db: Session = Depends(get_db)):
@@ -51,10 +59,17 @@ def eliminar_estado(estado_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== MUNICIPIO ===================
-@router.get("/municipio", response_model=list[schemas.Municipio])
-def listar_municipios(db: Session = Depends(get_db)):
-    return db.query(Municipio).all()
+# =================== CATALOGO: MUNICIPIO ===================
+@router.get("/municipio")
+def listar_municipios(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Municipio)
+    total = query.count()
+    municipios = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": municipios}
 
 @router.get("/municipio/{municipio_id}", response_model=schemas.Municipio)
 def obtener_municipio(municipio_id: int, db: Session = Depends(get_db)):
@@ -91,10 +106,17 @@ def eliminar_municipio(municipio_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== COMUNIDAD ===================
-@router.get("/comunidad", response_model=list[schemas.Comunidad])
-def listar_comunidades(db: Session = Depends(get_db)):
-    return db.query(Comunidad).all()
+# =================== CATALOGO: COMUNIDAD ===================
+@router.get("/comunidad")
+def listar_comunidades(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Comunidad)
+    total = query.count()
+    comunidades = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": comunidades}
 
 @router.get("/comunidad/{comunidad_id}", response_model=schemas.Comunidad)
 def obtener_comunidad(comunidad_id: int, db: Session = Depends(get_db)):
@@ -131,10 +153,20 @@ def eliminar_comunidad(comunidad_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== LOCALIDAD ===================
-@router.get("/localidad", response_model=list[schemas.Localidad])
-def listar_localidades(db: Session = Depends(get_db)):
-    return db.query(Localidad).all()
+# =================== CATALOGO: LOCALIDAD ===================
+@router.get("/localidad")
+def listar_localidades(
+    municipio_id: int = Query(None),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Localidad)
+    if municipio_id is not None:
+        query = query.filter(Localidad.municipio_id == municipio_id)
+    total = query.count()
+    localidades = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": localidades}
 
 @router.get("/localidad/{localidad_id}", response_model=schemas.Localidad)
 def obtener_localidad(localidad_id: int, db: Session = Depends(get_db)):
@@ -171,10 +203,17 @@ def eliminar_localidad(localidad_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== COLONIA ===================
-@router.get("/colonia", response_model=list[schemas.Colonia])
-def listar_colonias(db: Session = Depends(get_db)):
-    return db.query(Colonia).all()
+# =================== CATALOGO: COLONIA ===================
+@router.get("/colonia")
+def listar_colonias(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Colonia)
+    total = query.count()
+    colonias = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": colonias}
 
 @router.get("/colonia/{colonia_id}", response_model=schemas.Colonia)
 def obtener_colonia(colonia_id: int, db: Session = Depends(get_db)):

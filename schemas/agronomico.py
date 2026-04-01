@@ -1,3 +1,4 @@
+from typing import Dict
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -60,3 +61,16 @@ class MetodoAlmacenamiento(MetodoAlmacenamientoBase):
 	class Config:
 		from_attributes = True
 
+# Esquema para respuesta anidada de tipo_practica en PracticaAgricola
+class TipoPracticaNested(BaseModel):
+	nombre: str | None = None
+	descripcion: str | None = None
+
+class PracticaAgricolaConTipo(BaseModel):
+	id: int
+	nombre: str
+	descripcion: str | None = None
+	tipo_practica: TipoPracticaNested
+
+	class Config:
+		from_attributes = True

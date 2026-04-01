@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from sqlalchemy.orm import Session
 from database import get_db
 
 from models.germoplasma import ColorGrano, RazaMaiz, EstadoConservacion, UsoMaiz
 from models.agronomico import TipoPractica, PracticaAgricola, SistemaManejo, SistemaCultivo, MetodoAlmacenamiento
+from models.social import ProductorPractica
 
 import schemas.germoplasma as germplasma_schemes
 import schemas.agronomico as agronomico_schemes
@@ -13,10 +14,17 @@ router = APIRouter()
 
 # GERMOPLASMA DE MAÍZ NATIVO
 
-# =================== RAZA MAIZ ===================
-@router.get("/raza_maiz", response_model=list[germplasma_schemes.RazaMaiz])
-def listar_razas(db: Session = Depends(get_db)):
-	return db.query(RazaMaiz).all()
+# =================== CATALOGO: RAZA MAIZ ===================
+@router.get("/raza_maiz")
+def listar_razas(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(RazaMaiz)
+    total = query.count()
+    razas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": razas}
 
 @router.get("/raza_maiz/{raza_id}", response_model=germplasma_schemes.RazaMaiz)
 def obtener_raza(raza_id: int, db: Session = Depends(get_db)):
@@ -53,10 +61,17 @@ def eliminar_raza(raza_id: int, db: Session = Depends(get_db)):
 	db.commit()
 	return {"ok": True}
 
-# =================== COLOR GRANO ===================
-@router.get("/color_grano", response_model=list[germplasma_schemes.ColorGrano])
-def listar_colores(db: Session = Depends(get_db)):
-	return db.query(ColorGrano).all()
+# =================== CATALOGO: COLOR GRANO ===================
+@router.get("/color_grano")
+def listar_colores(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(ColorGrano)
+    total = query.count()
+    colores = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": colores}
 
 @router.get("/color_grano/{color_id}", response_model=germplasma_schemes.ColorGrano)
 def obtener_color(color_id: int, db: Session = Depends(get_db)):
@@ -93,10 +108,17 @@ def eliminar_color(color_id: int, db: Session = Depends(get_db)):
 	db.commit()
 	return {"ok": True}
 
-# =================== ESTADO CONSERVACION ===================
-@router.get("/estado_conservacion", response_model=list[germplasma_schemes.EstadoConservacion])
-def listar_estados_conservacion(db: Session = Depends(get_db)):
-	return db.query(EstadoConservacion).all()
+# =================== CATALOGO: ESTADO CONSERVACION ===================
+@router.get("/estado_conservacion")
+def listar_estados_conservacion(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(EstadoConservacion)
+    total = query.count()
+    estados = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": estados}
 
 @router.get("/estado_conservacion/{estado_id}", response_model=germplasma_schemes.EstadoConservacion)
 def obtener_estado_conservacion(estado_id: int, db: Session = Depends(get_db)):
@@ -133,10 +155,17 @@ def eliminar_estado_conservacion(estado_id: int, db: Session = Depends(get_db)):
 	db.commit()
 	return {"ok": True}
 
-# =================== USO MAIZ ===================
-@router.get("/uso_maiz", response_model=list[germplasma_schemes.UsoMaiz])
-def listar_usos_maiz(db: Session = Depends(get_db)):
-	return db.query(UsoMaiz).all()
+# =================== CATALOGO: USO MAIZ ===================
+@router.get("/uso_maiz")
+def listar_usos_maiz(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(UsoMaiz)
+    total = query.count()
+    usos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": usos}
 
 @router.get("/uso_maiz/{uso_id}", response_model=germplasma_schemes.UsoMaiz)
 def obtener_uso_maiz(uso_id: int, db: Session = Depends(get_db)):
@@ -173,12 +202,17 @@ def eliminar_uso_maiz(uso_id: int, db: Session = Depends(get_db)):
 	db.commit()
 	return {"ok": True}
 
-# EJE AGRONÓMICO
-
-# =================== TIPO PRACTICA ===================
-@router.get("/tipo_practica", response_model=list[agronomico_schemes.TipoPractica])
-def listar_tipo_practica(db: Session = Depends(get_db)):
-    return db.query(TipoPractica).all()
+# =================== CATALOGO: TIPO PRACTICA ===================
+@router.get("/tipo_practica")
+def listar_tipo_practica(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(TipoPractica)
+    total = query.count()
+    tipos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": tipos}
 
 @router.get("/tipo_practica/{tipo_id}", response_model=agronomico_schemes.TipoPractica)
 def obtener_tipo_practica(tipo_id: int, db: Session = Depends(get_db)):
@@ -215,10 +249,17 @@ def eliminar_tipo_practica(tipo_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== PRACTICA AGRICOLA ===================
-@router.get("/practica_agricola", response_model=list[agronomico_schemes.PracticaAgricola])
-def listar_practicas_agricolas(db: Session = Depends(get_db)):
-    return db.query(PracticaAgricola).all()
+# =================== CATALOGO: PRACTICA AGRICOLA ===================
+@router.get("/practica_agricola")
+def listar_practicas_agricolas(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(PracticaAgricola)
+    total = query.count()
+    practicas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": practicas}
 
 @router.get("/practica_agricola/{practica_id}", response_model=agronomico_schemes.PracticaAgricola)
 def obtener_practica_agricola(practica_id: int, db: Session = Depends(get_db)):
@@ -255,10 +296,17 @@ def eliminar_practica_agricola(practica_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== SISTEMA MANEJO ===================
-@router.get("/sistema_manejo", response_model=list[agronomico_schemes.SistemaManejo])
-def listar_sistemas_manejo(db: Session = Depends(get_db)):
-    return db.query(SistemaManejo).all()
+# =================== CATALOGO: SISTEMA MANEJO ===================
+@router.get("/sistema_manejo")
+def listar_sistemas_manejo(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(SistemaManejo)
+    total = query.count()
+    sistemas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": sistemas}
 
 @router.get("/sistema_manejo/{sistema_id}", response_model=agronomico_schemes.SistemaManejo)
 def obtener_sistema_manejo(sistema_id: int, db: Session = Depends(get_db)):
@@ -295,10 +343,17 @@ def eliminar_sistema_manejo(sistema_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== SISTEMA CULTIVO ===================
-@router.get("/sistema_cultivo", response_model=list[agronomico_schemes.SistemaCultivo])
-def listar_sistema_cultivo(db: Session = Depends(get_db)):
-    return db.query(SistemaCultivo).all()
+# =================== CATALOGO: SISTEMA CULTIVO ===================
+@router.get("/sistema_cultivo")
+def listar_sistema_cultivo(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(SistemaCultivo)
+    total = query.count()
+    sistemas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": sistemas}
 
 @router.get("/sistema_cultivo/{sistema_id}", response_model=agronomico_schemes.SistemaCultivo)
 def obtener_sistema_cultivo(sistema_id: int, db: Session = Depends(get_db)):
@@ -336,10 +391,17 @@ def eliminar_sistema_cultivo(sistema_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
-# =================== METODO ALMACENAMIENTO ===================
-@router.get("/metodo_almacenamiento", response_model=list[agronomico_schemes.MetodoAlmacenamiento])
-def listar_metodo_almacenamiento(db: Session = Depends(get_db)):
-    return db.query(MetodoAlmacenamiento).all()
+# =================== CATALOGO: METODO ALMACENAMIENTO ===================
+@router.get("/metodo_almacenamiento")
+def listar_metodo_almacenamiento(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(MetodoAlmacenamiento)
+    total = query.count()
+    metodos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": metodos}
 
 @router.get("/metodo_almacenamiento/{metodo_id}", response_model=agronomico_schemes.MetodoAlmacenamiento)
 def obtener_metodo_almacenamiento(metodo_id: int, db: Session = Depends(get_db)):

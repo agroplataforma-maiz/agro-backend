@@ -26,10 +26,19 @@ def healthcheck(db: Session = Depends(get_db)):
 
 # -- EJE DE TRAZABILIDAD Y GEODATOS --
 
-# =================== TIPO PRODUCTO DRON ===================
-@router.get("/tipo_producto_dron", response_model=list[trazabilidad.TipoProductoDron])
-def listar_tipo_producto_dron(db: Session = Depends(get_db)):
-    return db.query(TipoProductoDron).all()
+# =================== CATALOGO: TIPO PRODUCTO DRON ===================
+from fastapi import Query
+
+@router.get("/tipo_producto_dron")
+def listar_tipo_producto_dron(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(TipoProductoDron)
+    total = query.count()
+    productos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": productos}
 
 @router.get("/tipo_producto_dron/{producto_id}", response_model=trazabilidad.TipoProductoDron)
 def obtener_tipo_producto_dron(producto_id: int, db: Session = Depends(get_db)):
@@ -66,10 +75,17 @@ def eliminar_tipo_producto_dron(producto_id: int, db: Session = Depends(get_db))
     db.commit()
     return {"ok": True}
 
-# =================== FORMATO ARCHIVO ===================
-@router.get("/formato_archivo", response_model=list[trazabilidad.FormatoArchivo])
-def listar_formato_archivo(db: Session = Depends(get_db)):
-    return db.query(FormatoArchivo).all()
+# =================== CATALOGO: FORMATO ARCHIVO ===================
+@router.get("/formato_archivo")
+def listar_formato_archivo(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(FormatoArchivo)
+    total = query.count()
+    formatos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": formatos}
 
 @router.get("/formato_archivo/{formato_id}", response_model=trazabilidad.FormatoArchivo)
 def obtener_formato_archivo(formato_id: int, db: Session = Depends(get_db)):
@@ -106,10 +122,17 @@ def eliminar_formato_archivo(formato_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== TIPO CAPA SIG ===================
-@router.get("/tipo_capa_sig", response_model=list[trazabilidad.TipoCapaSIG])
-def listar_tipo_capa_sig(db: Session = Depends(get_db)):
-    return db.query(TipoCapaSIG).all()
+# =================== CATALOGO: TIPO CAPA SIG ===================
+@router.get("/tipo_capa_sig")
+def listar_tipo_capa_sig(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(TipoCapaSIG)
+    total = query.count()
+    capas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": capas}
 
 @router.get("/tipo_capa_sig/{capa_id}", response_model=trazabilidad.TipoCapaSIG)
 def obtener_tipo_capa_sig(capa_id: int, db: Session = Depends(get_db)):
@@ -146,10 +169,17 @@ def eliminar_tipo_capa_sig(capa_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== FUENTE CAPTURA ===================
-@router.get("/fuente_captura", response_model=list[trazabilidad.FuenteCaptura])
-def listar_fuente_captura(db: Session = Depends(get_db)):
-    return db.query(FuenteCaptura).all()
+# =================== CATALOGO: FUENTE CAPTURA ===================
+@router.get("/fuente_captura")
+def listar_fuente_captura(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(FuenteCaptura)
+    total = query.count()
+    fuentes = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": fuentes}
 
 @router.get("/fuente_captura/{fuente_id}", response_model=trazabilidad.FuenteCaptura)
 def obtener_fuente_captura(fuente_id: int, db: Session = Depends(get_db)):
@@ -186,10 +216,19 @@ def eliminar_fuente_captura(fuente_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== FUENTE INFORMACION ===================
-@router.get("/fuente_informacion", response_model=list[trazabilidad.FuenteInformacion])
-def listar_fuente_informacion(db: Session = Depends(get_db)):
-    return db.query(FuenteInformacion).all()
+# =================== CATALOGO: FUENTE INFORMACION ===================
+from fastapi import Query
+
+@router.get("/fuente_informacion")
+def listar_fuente_informacion(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(FuenteInformacion)
+    total = query.count()
+    fuentes = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": fuentes}
 
 @router.get("/fuente_informacion/{fuente_id}", response_model=trazabilidad.FuenteInformacion)
 def obtener_fuente_informacion(fuente_id: int, db: Session = Depends(get_db)):
@@ -226,10 +265,17 @@ def eliminar_fuente_informacion(fuente_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== ORIGEN MUESTRA ===================
-@router.get("/origen_muestra", response_model=list[trazabilidad.OrigenMuestra])
-def listar_origen_muestra(db: Session = Depends(get_db)):
-    return db.query(OrigenMuestra).all()
+# =================== CATALOGO: ORIGEN MUESTRA ===================
+@router.get("/origen_muestra")
+def listar_origen_muestra(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(OrigenMuestra)
+    total = query.count()
+    origenes = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": origenes}
 
 @router.get("/origen_muestra/{origen_id}", response_model=trazabilidad.OrigenMuestra)
 def obtener_origen_muestra(origen_id: int, db: Session = Depends(get_db)):
@@ -266,10 +312,17 @@ def eliminar_origen_muestra(origen_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# ORIGEN SEMILLA
-@router.get("/origen_semilla", response_model=list[trazabilidad.OrigenSemilla])
-def listar_origen_semilla(db: Session = Depends(get_db)):
-    return db.query(OrigenSemilla).all()
+# =================== CATALOGO: ORIGEN SEMILLA ===================
+@router.get("/origen_semilla")
+def listar_origen_semilla(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(OrigenSemilla)
+    total = query.count()
+    origenes = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": origenes}
 
 @router.get("/origen_semilla/{origen_id}", response_model=trazabilidad.OrigenSemilla)
 def obtener_origen_semilla(origen_id: int, db: Session = Depends(get_db)):

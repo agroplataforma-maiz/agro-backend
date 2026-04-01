@@ -8,6 +8,7 @@ class TipoPractica(Base):
 	__table_args__ = {"schema": "catalogo"}
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
+	descripcion = Column(Text)
 	practicas = relationship("PracticaAgricola", back_populates="tipo")
 
 class PracticaAgricola(Base):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from sqlalchemy.orm import Session
 from database import get_db
@@ -9,10 +9,17 @@ import schemas.fenotipo as schemes
 
 router = APIRouter()
 
-# =================== TIPO FENOTIPO ===================
-@router.get("/tipo_fenotipo", response_model=list[schemes.TipoFenotipo])
-def listar_tipo_fenotipo(db: Session = Depends(get_db)):
-    return db.query(TipoFenotipo).all()
+# =================== CATALOGO:TIPO FENOTIPO ===================
+@router.get("/tipo_fenotipo")
+def listar_tipo_fenotipo(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(TipoFenotipo)
+    total = query.count()
+    tipos = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": tipos}
 
 @router.get("/tipo_fenotipo/{fenotipo_id}", response_model=schemes.TipoFenotipo)
 def obtener_tipo_fenotipo(fenotipo_id: int, db: Session = Depends(get_db)):
@@ -49,10 +56,17 @@ def eliminar_tipo_fenotipo(fenotipo_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"ok": True}
 
-# =================== ETAPA FENOLÓGICA ===================
-@router.get("/etapa_fenologica", response_model=list[schemes.EtapaFenologica])
-def listar_etapa_fenologica(db: Session = Depends(get_db)):
-    return db.query(EtapaFenologica).all()
+# =================== CATALOGO: ETAPA FENOLÓGICA ===================
+@router.get("/etapa_fenologica")
+def listar_etapa_fenologica(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(EtapaFenologica)
+    total = query.count()
+    etapas = query.offset(offset).limit(limit).all()
+    return {"count": total, "results": etapas}
 
 @router.get("/etapa_fenologica/{etapa_id}", response_model=schemes.EtapaFenologica)
 def obtener_etapa_fenologica(etapa_id: int, db: Session = Depends(get_db)):
