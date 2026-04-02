@@ -88,6 +88,25 @@ class UsuarioPublico(BaseModel):
  
 class CambioRol(BaseModel):
     rol: Rol
+
+
+class ActualizarUsuario(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    nombre_completo: Optional[str] = None
+    rol: Optional[Rol] = None
+    activo: Optional[bool] = None
+
+    @validator("username")
+    def username_valido(cls, v):
+        if v is not None:
+            if len(v) < 3:
+                raise ValueError("El username debe tener al menos 3 caracteres")
+            permitido = v.replace("_", "").replace("-", "").replace(".", "")
+            if not permitido.isalnum():
+                raise ValueError("El username solo puede contener letras, números, -, _ y .")
+            return v.lower()
+        return v
  
  
 class ActualizarPerfil(BaseModel):
@@ -100,4 +119,25 @@ class ActualizarPerfil(BaseModel):
     def password_nuevo_seguro(cls, v):
         if v and len(v) < 8:
             raise ValueError("La nueva contraseña debe tener al menos 8 caracteres")
+        return v
+
+
+class CambiarPassword(BaseModel):
+    password_actual: str
+    password_nuevo: str
+
+    @validator("password_nuevo")
+    def password_nuevo_seguro(cls, v):
+        if len(v) < 8:
+            raise ValueError("La nueva contraseña debe tener al menos 8 caracteres")
+        return v
+
+
+class ResetPassword(BaseModel):
+    password_nuevo: str
+
+    @validator("password_nuevo")
+    def password_seguro(cls, v):
+        if len(v) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
         return v

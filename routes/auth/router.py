@@ -6,11 +6,15 @@ Endpoints:
   POST /auth/login      → Login (email o username) → JWT
   GET  /auth/me         → Perfil del usuario autenticado
   PUT  /auth/me         → Actualizar perfil propio
+  PUT  /auth/me/cambiar-password → Cambiar contraseña propia
   GET  /auth/usuarios   → Listar usuarios (solo admin)
+  PUT  /auth/usuarios/{id}             → Actualizar usuario (solo admin)
+  DELETE /auth/usuarios/{id}           → Eliminar usuario (solo admin)
   PUT  /auth/usuarios/{id}/rol         → Cambiar rol (solo admin)
   POST /auth/usuarios/{id}/desactivar  → Desactivar cuenta (solo admin)
   PUT  /auth/usuarios/{id}/desactivar  → Desactivar cuenta (solo admin)
   PUT  /auth/usuarios/{id}/activar     → Activar cuenta (solo admin)
+  PUT  /auth/usuarios/{id}/reset-password → Resetear contraseña (solo admin)
 """
 
 from datetime import datetime
@@ -27,7 +31,7 @@ from models.usuarios import Usuario
 # Crear un router propio para autenticación
 router = APIRouter()
 from core.security import ACCESS_TOKEN_EXPIRE_MINUTES, crear_token, get_usuario_actual, hash_password, requiere_rol, verificar_password
-from schemas.usuarios import ActualizarPerfil, CambioRol, Rol, TokenResponse, UsuarioLogin, UsuarioPublico, UsuarioRegistro
+from schemas.usuarios import ActualizarPerfil, ActualizarUsuario, CambiarPassword, CambioRol, ResetPassword, Rol, TokenResponse, UsuarioLogin, UsuarioPublico, UsuarioRegistro
 
 solo_admin = requiere_rol(Rol.administrador)
 admin_o_investigador = requiere_rol(Rol.administrador, Rol.investigador)
@@ -44,6 +48,12 @@ def registrar_usuario(datos: UsuarioRegistro, db: Session = Depends(get_db)):
         (Usuario.username == datos.username) | (Usuario.email == datos.email)
     ).first():
         raise HTTPException(status_code=400, detail="Username o email ya registrado")
+
+    if datos.rol != Rol.visualizador:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo se puede registrar con rol 'visualizador'. Un administrador debe asignar roles elevados."
+        )
  
     nuevo = Usuario(
         username=datos.username,
@@ -130,12 +140,57 @@ def actualizar_mi_perfil(
     if datos.email: u.email = datos.email
     db.commit()
     return {"mensaje": "Perfil actualizado correctamente"}
- 
+
+
+@router.put("/me/cambiar-password")
+def cambiar_password(
+    datos: CambiarPassword,
+    usuario=Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    """Cambia la contraseña del usuario autenticado."""
+    u = db.query(Usuario).filter(Usuario.id == usuario["id"]).first()
+    if not verificar_password(datos.password_actual, u.hashed_password):
+        raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
+    u.hashed_password = hash_password(datos.password_nuevo)
+    db.commit()
+    return {"mensaje": "Contraseña actualizada correctamente"}
+
 
 @router.get("/usuarios", dependencies=[Depends(solo_admin)])
 def listar_usuarios(db: Session = Depends(get_db)):
     """Lista todos los usuarios. Solo administradores."""
     return db.query(Usuario).all()
+
+
+@router.put("/usuarios/{usuario_id}", response_model=UsuarioPublico, dependencies=[Depends(solo_admin)])
+def actualizar_usuario(usuario_id: int, datos: ActualizarUsuario, db: Session = Depends(get_db)):
+    """Actualiza campos de un usuario. Solo administradores."""
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if datos.username and datos.username != u.username:
+        if db.query(Usuario).filter(Usuario.username == datos.username).first():
+            raise HTTPException(status_code=400, detail="Username ya en uso")
+    if datos.email and datos.email != u.email:
+        if db.query(Usuario).filter(Usuario.email == datos.email).first():
+            raise HTTPException(status_code=400, detail="Email ya en uso")
+    for key, value in datos.dict(exclude_unset=True).items():
+        setattr(u, key, value)
+    db.commit()
+    db.refresh(u)
+    return u
+
+
+@router.delete("/usuarios/{usuario_id}", dependencies=[Depends(solo_admin)])
+def eliminar_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    """Elimina permanentemente un usuario. Solo administradores."""
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    db.delete(u)
+    db.commit()
+    return {"mensaje": "Usuario eliminado"}
 
 
 @router.put("/usuarios/{usuario_id}/rol", dependencies=[Depends(solo_admin)])
@@ -182,3 +237,14 @@ def activar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     u.activo = True
     db.commit()
     return {"mensaje": "Usuario activado"}
+
+
+@router.put("/usuarios/{usuario_id}/reset-password", dependencies=[Depends(solo_admin)])
+def reset_password(usuario_id: int, datos: ResetPassword, db: Session = Depends(get_db)):
+    """Resetea la contraseña de un usuario. Solo administradores."""
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    u.hashed_password = hash_password(datos.password_nuevo)
+    db.commit()
+    return {"mensaje": "Contraseña reseteada correctamente"}
