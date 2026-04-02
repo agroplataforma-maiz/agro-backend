@@ -14,12 +14,12 @@ from routes.fenotipo.router import router as fenotipo_router
 
 from routes.trazabilidad.router import router as trazabilidad_router
 
-app = FastAPI(title="Agroplataforma Maíz API")
+app = FastAPI(title="Agroplataforma Maíz API", redirect_slashes=False)
 
 # Configuración de CORS
 app.add_middleware(
 	CORSMiddleware,
-	allow_origins=["https://agromaiz.mx","http://agromaiz.mx"],
+	allow_origins=["https://agromaiz.mx"],
 	allow_credentials=True,
 	allow_methods=["*"],
 	allow_headers=["*"],
