@@ -48,12 +48,6 @@ def registrar_usuario(datos: UsuarioRegistro, db: Session = Depends(get_db)):
         (Usuario.username == datos.username) | (Usuario.email == datos.email)
     ).first():
         raise HTTPException(status_code=400, detail="Username o email ya registrado")
-
-    if datos.rol != Rol.visualizador:
-        raise HTTPException(
-            status_code=403,
-            detail="Solo se puede registrar con rol 'visualizador'. Un administrador debe asignar roles elevados."
-        )
  
     nuevo = Usuario(
         username=datos.username,
