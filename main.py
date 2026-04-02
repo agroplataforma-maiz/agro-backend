@@ -27,18 +27,18 @@ app.add_middleware(
 
 # Rutas por módulo
 
-app.include_router(auth_router, prefix="/api/auth", tags=["Autenticación"])
+app.include_router(auth_router, prefix="/auth", tags=["Autenticación"])
 
-app.include_router(geo_router, prefix="/api/geo", tags=["Geoespacial"])
-app.include_router(amb_router, prefix="/api/amb", tags=["Ambiental"])
+app.include_router(geo_router, prefix="/geo", tags=["Geoespacial"])
+app.include_router(amb_router, prefix="/amb", tags=["Ambiental"])
 
-app.include_router(social_router, prefix="/api/social", tags=["Social"])
-app.include_router(cultural_router, prefix="/api/cultural", tags=["Cultural"])
+app.include_router(social_router, prefix="/social", tags=["Social"])
+app.include_router(cultural_router, prefix="/cultural", tags=["Cultural"])
 
-app.include_router(agro_router, prefix="/api/agro", tags=["Agronómico"])
-app.include_router(fenotipo_router, prefix="/api/fenotipo", tags=["Fenotipo"])
+app.include_router(agro_router, prefix="/agro", tags=["Agronómico"])
+app.include_router(fenotipo_router, prefix="/fenotipo", tags=["Fenotipo"])
 
-app.include_router(trazabilidad_router, prefix="/api/trazabilidad", tags=["Trazabilidad"])
+app.include_router(trazabilidad_router, prefix="/trazabilidad", tags=["Trazabilidad"])
 
 
 @app.get("/")
