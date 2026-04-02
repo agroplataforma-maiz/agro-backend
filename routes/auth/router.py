@@ -7,8 +7,10 @@ Endpoints:
   GET  /auth/me         → Perfil del usuario autenticado
   PUT  /auth/me         → Actualizar perfil propio
   GET  /auth/usuarios   → Listar usuarios (solo admin)
-  PUT  /auth/usuarios/{id}/rol  → Cambiar rol (solo admin)
-  POST /auth/usuarios/{id}/desactivar → Desactivar cuenta (solo admin)
+  PUT  /auth/usuarios/{id}/rol         → Cambiar rol (solo admin)
+  POST /auth/usuarios/{id}/desactivar  → Desactivar cuenta (solo admin)
+  PUT  /auth/usuarios/{id}/desactivar  → Desactivar cuenta (solo admin)
+  PUT  /auth/usuarios/{id}/activar     → Activar cuenta (solo admin)
 """
 
 from datetime import datetime
@@ -154,3 +156,29 @@ def desactivar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     u.activo = False
     db.commit()
     return {"mensaje": "Usuario desactivado"}
+
+
+@router.put("/usuarios/{usuario_id}/desactivar", dependencies=[Depends(solo_admin)])
+def desactivar_usuario_put(usuario_id: int, db: Session = Depends(get_db)):
+    """Desactiva una cuenta. Solo administradores."""
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not u.activo:
+        raise HTTPException(status_code=400, detail="El usuario ya está desactivado")
+    u.activo = False
+    db.commit()
+    return {"mensaje": "Usuario desactivado"}
+
+
+@router.put("/usuarios/{usuario_id}/activar", dependencies=[Depends(solo_admin)])
+def activar_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    """Reactiva una cuenta desactivada. Solo administradores."""
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if u.activo:
+        raise HTTPException(status_code=400, detail="El usuario ya está activo")
+    u.activo = True
+    db.commit()
+    return {"mensaje": "Usuario activado"}
