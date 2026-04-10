@@ -156,7 +156,7 @@ def eliminar_comunidad(comunidad_id: int, db: Session = Depends(get_db)):
 # =================== CATALOGO: LOCALIDAD ===================
 @router.get("/localidad")
 def listar_localidades(
-    municipio_id: int = Query(None),
+    municipio_id: int = Query(None, description="ID del municipio para filtrar localidades"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db)

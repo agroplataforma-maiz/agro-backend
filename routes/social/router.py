@@ -60,18 +60,24 @@ def eliminar_tipo_productor(tipo_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 # =================== LENGUA ===================
+
 @router.get("/lengua")
 def listar_lenguas(
     productor_id: int = Query(None),
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
+    limit: int = Query(None, ge=1, le=1000),
+    offset: int = Query(None, ge=0),
     db: Session = Depends(get_db)
 ):
     query = db.query(Lengua)
     if productor_id is not None:
         query = query.join(ProductorLengua).filter(ProductorLengua.productor_id == productor_id)
     total = query.count()
-    lenguas = query.offset(offset).limit(limit).all()
+    # Si limit y offset no se especifican, no aplicar paginación
+    if limit is not None:
+        query = query.limit(limit)
+    if offset is not None:
+        query = query.offset(offset)
+    lenguas = query.all()
     return {"count": total, "results": lenguas}
 
 @router.get("/lengua/{lengua_id}", response_model=schemes.Lengua)

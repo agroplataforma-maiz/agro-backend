@@ -18,13 +18,13 @@ Endpoints:
 """
 
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from database import get_db
 
-from fastapi import APIRouter
+from typing import Optional
 
 from models.usuarios import Usuario
 
@@ -151,10 +151,16 @@ def cambiar_password(
     return {"mensaje": "Contraseña actualizada correctamente"}
 
 
-@router.get("/usuarios", dependencies=[Depends(solo_admin)])
-def listar_usuarios(db: Session = Depends(get_db)):
-    """Lista todos los usuarios. Solo administradores."""
-    return db.query(Usuario).all()
+@router.get("/usuarios", dependencies=[Depends(admin_o_investigador)])
+def listar_usuarios(
+    rol: Optional[str] = Query(None, description="Filtrar por rol"),
+    db: Session = Depends(get_db)
+):
+    """Lista todos los usuarios. Solo administradores e investigadores. Permite filtrar por rol."""
+    query = db.query(Usuario)
+    if rol:
+        query = query.filter(Usuario.rol == rol)
+    return query.all()
 
 
 @router.put("/usuarios/{usuario_id}", response_model=UsuarioPublico, dependencies=[Depends(solo_admin)])
