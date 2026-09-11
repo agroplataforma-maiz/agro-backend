@@ -2,6 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 from datetime import datetime
+from uuid import UUID
 
 from core.constants import ACCESS_TOKEN_EXPIRE_MINUTES
 # ═══════════════════════════════════════════════════════
@@ -73,14 +74,15 @@ class TokenResponse(BaseModel):
  
  
 class UsuarioPublico(BaseModel):
-    id: int
+    id: UUID
     username: str
     email: str
-    nombre_completo: Optional[str]
+    nombre_completo: Optional[str] = None
     rol: Rol
     activo: bool
-    fecha_registro: datetime
-    ultimo_acceso: Optional[datetime]
+    ultimo_acceso: Optional[datetime] = None
+    creado_en: datetime
+    actualizado_en: datetime
  
     class Config:
         from_attributes = True

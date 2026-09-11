@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 
-from models.territorio import Estado, Municipio, Comunidad, Localidad, Colonia
-
+from models.territorio import Estado, Municipio, Localidad, Colonia
+from models.core import Comunidad
 import schemas.geoespacial as schemas
 
 router = APIRouter()

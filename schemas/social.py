@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import date, datetime
+from uuid import UUID
 
 # =================== SOCIOCULTURAL ===================
 class TipoProductorBase(BaseModel):
@@ -479,3 +480,93 @@ class NombreLenguaOriginariaOut(NombreLenguaOriginariaBase):
     updated_at: Optional[str]
     class Config:
         from_attributes = True
+
+class TecnicoCampoOut(BaseModel):
+    id: UUID
+    user_id: UUID
+    especialidad: Optional[str] = None
+    zona_asignada: Optional[str] = None
+    activo: bool = True
+    creado_en: datetime
+    actualizado_en: datetime
+
+    class Config:
+        from_attributes = True
+
+class TecnicoProductorCreate(BaseModel):
+    tecnico_campo_id: UUID
+    productor_id: UUID
+    estado: Optional[str] = "activo"
+    notas: Optional[str] = None
+
+
+class TecnicoProductorOut(BaseModel):
+    id: UUID
+    tecnico_campo_id: UUID
+    productor_id: UUID
+    estado: str
+    fecha_asignacion: datetime
+    fecha_finalizacion: Optional[datetime] = None
+    notas: Optional[str] = None
+    motivo_finalizacion: Optional[str] = None
+    asignado_por_usuario_id: Optional[UUID] = None
+    finalizado_por_usuario_id: Optional[UUID] = None
+    creado_en: datetime
+    actualizado_en: datetime
+
+    class Config:
+        from_attributes = True             
+
+class InvestigadorCrear(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    nombre_completo: str
+
+    institucion: Optional[str] = None
+    especialidad: Optional[str] = None
+    orcid: Optional[str] = None
+    pais: Optional[str] = None
+    notas: Optional[str] = None
+
+
+class InvestigadorRespuesta(BaseModel):
+    id: UUID
+    user_id: UUID
+    username: str
+    email: EmailStr
+    nombre_completo: str
+    rol: str
+
+    institucion: Optional[str] = None
+    especialidad: Optional[str] = None
+    orcid: Optional[str] = None
+    pais: Optional[str] = None
+    notas: Optional[str] = None
+
+class TecnicoCampoCrear(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    nombre_completo: str
+
+    institucion: Optional[str] = None
+    especialidad: Optional[str] = None
+    notas: Optional[str] = None
+
+
+class TecnicoCampoRespuesta(BaseModel):
+    id: UUID
+    user_id: UUID
+    username: str
+    email: EmailStr
+    nombre_completo: str
+    rol: str
+    activo: bool
+
+    institucion: Optional[str] = None
+    especialidad: Optional[str] = None
+    notas: Optional[str] = None
+
+    class Config:
+        from_attributes = True    

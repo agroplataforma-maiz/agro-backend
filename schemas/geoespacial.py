@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from uuid import UUID
+from decimal import Decimal
 
 # =================== TERRITORIAL ===================
 class EstadoBase(BaseModel):
@@ -93,3 +95,95 @@ class Colonia(ColoniaBase):
 	updated_at: datetime | None
 	class Config:
 		from_attributes = True
+
+# =================== PARCELA ===================
+
+class ParcelaBase(BaseModel):
+    nombre: Optional[str] = None
+    superficie_ha: Optional[Decimal] = None
+    sistema_manejo_id: Optional[int] = None
+    tenencia: Optional[str] = None
+    topografia: Optional[str] = None
+    productor_id: UUID
+    ubicacion_id: Optional[UUID] = None
+    poligono: str
+    densidad_plantas_ha: Optional[int] = None
+    observaciones_sitio: Optional[str] = None
+
+
+class ParcelaCreate(ParcelaBase):
+    pass
+
+
+class ParcelaRespuesta(BaseModel):
+    id: UUID
+    nombre: Optional[str] = None
+    superficie_ha: Optional[Decimal] = None
+    sistema_manejo_id: Optional[int] = None
+    tenencia: Optional[str] = None
+    topografia: Optional[str] = None
+    productor_id: UUID
+    ubicacion_id: Optional[UUID] = None
+    poligono: Optional[str] = None
+    densidad_plantas_ha: Optional[int] = None
+    observaciones_sitio: Optional[str] = None
+    creado_en: Optional[datetime] = None
+    actualizado_en: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+		
+# =================== UBICACION ===================
+
+from uuid import UUID
+from decimal import Decimal
+
+
+class UbicacionCreate(BaseModel):
+    nombre: Optional[str] = None
+    tipo_ubicacion: Optional[str] = None
+    descripcion: Optional[str] = None
+
+    latitud: Decimal
+    longitud: Decimal
+
+    altitud_m: Optional[Decimal] = None
+    altitud_fuente: Optional[str] = None
+    precision_gps: Optional[Decimal] = None
+
+    municipio_id: Optional[int] = None
+
+    sistema_referencia: Optional[str] = "WGS84"
+    fuente_captura_id: Optional[int] = None
+
+    tags: Optional[list[str]] = None
+
+
+class UbicacionRespuesta(BaseModel):
+    id: UUID
+    nombre: Optional[str] = None
+    tipo_ubicacion: Optional[str] = None
+    descripcion: Optional[str] = None
+
+    latitud: Decimal
+    longitud: Decimal
+
+    altitud_m: Optional[Decimal] = None
+    altitud_fuente: Optional[str] = None
+    precision_gps: Optional[Decimal] = None
+
+    municipio_id: Optional[int] = None
+
+    sistema_referencia: Optional[str] = None
+    fuente_captura_id: Optional[int] = None
+
+    tags: Optional[list[str]] = None
+
+    activo: Optional[bool] = None
+
+    creado_en: Optional[datetime] = None
+    actualizado_en: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+				

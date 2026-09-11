@@ -1,7 +1,7 @@
-from sqlalchemy.orm import relationship
-
 from database import Base
 from sqlalchemy import CHAR, DECIMAL, Column, ForeignKey, Integer, String, Boolean, TIMESTAMP, SmallInteger
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import text
 
 # =================== TERRITORIAL ===================
 class Estado(Base):
@@ -13,7 +13,6 @@ class Estado(Base):
 	abreviatura = Column(String(10))
 	created_at = Column(TIMESTAMP)
 	updated_at = Column(TIMESTAMP)
-	municipios = relationship("Municipio", back_populates="estado")
 
 class Municipio(Base):
 	__tablename__ = "municipio"
@@ -31,25 +30,6 @@ class Municipio(Base):
 	superficie_km2 = Column(DECIMAL(10,2))
 	created_at = Column(TIMESTAMP)
 	updated_at = Column(TIMESTAMP)
-	estado = relationship("Estado", back_populates="municipios")
-	comunidades = relationship("Comunidad", back_populates="municipio")
-	localidades = relationship("Localidad", back_populates="municipio")
-
-class Comunidad(Base):
-	__tablename__ = "comunidad"
-	__table_args__ = {"schema": "catalogo"}
-	id = Column(Integer, primary_key=True, index=True)
-	nombre = Column(String(200), nullable=False)
-	nombre_lengua_orig = Column(String(200))
-	tipo = Column(String(50))
-	municipio_id = Column(Integer, ForeignKey("catalogo.municipio.id"), nullable=False)
-	poblacion_total = Column(Integer)
-	num_localidades = Column(SmallInteger)
-	fuente = Column(String(100), default="INEGI 2020")
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
-	municipio = relationship("Municipio", back_populates="comunidades")
-	localidades = relationship("Localidad", back_populates="comunidad")
 
 class Localidad(Base):
 	__tablename__ = "localidad"
@@ -72,13 +52,10 @@ class Localidad(Base):
 	fuente = Column(String(100), default="INEGI 2020")
 	created_at = Column(TIMESTAMP)
 	updated_at = Column(TIMESTAMP)
-	municipio = relationship("Municipio", back_populates="localidades")
-	comunidad = relationship("Comunidad", back_populates="localidades")
-	colonias = relationship("Colonia", back_populates="localidad")
 
 class Colonia(Base):
 	__tablename__ = "colonia"
-	__table_args__ = {"schema": "catalogo"}
+	__table_args__ = {"schema": "core"}
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(200), nullable=False)
 	tipo = Column(String(50))
@@ -88,4 +65,3 @@ class Colonia(Base):
 	localidad_id = Column(Integer, ForeignKey("catalogo.localidad.id"), nullable=False)
 	created_at = Column(TIMESTAMP)
 	updated_at = Column(TIMESTAMP)
-	localidad = relationship("Localidad", back_populates="colonias")

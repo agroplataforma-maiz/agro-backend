@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,7 @@ from passlib.context import CryptContext
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from schemas.usuarios import Rol
+from models.sistema import Usuario
 
 import os
 from core.constants import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -25,9 +27,9 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 horas
  
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/form")
  
-router = APIRouter(prefix="/auth", tags=["Autenticación"])
+#router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 # ═══════════════════════════════════════════════════════
 # UTILIDADES JWT
@@ -64,20 +66,61 @@ def decodificar_token(token: str) -> dict:
 # ═══════════════════════════════════════════════════════
 def get_usuario_actual(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(lambda: None),  # reemplaza con get_db
+    db: Session = Depends(get_db),  # reemplaza con get_db
 ):
     payload = decodificar_token(token)
     user_id = payload.get("sub")
     if not user_id:
-        raise HTTPException(status_code=401, detail="Token inválido")
- 
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        usuario_id = UUID(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="ID de usuario inválido en el token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    usuario = (
+        db.query(Usuario)
+        .filter(
+            Usuario.id == usuario_id,
+            Usuario.activo == True
+        )
+        .first()
+    )
+
+    if not usuario:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado o inactivo",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return {
+        "id": usuario.id,
+        "username": usuario.username,
+        "email": usuario.email,
+        "nombre_completo": usuario.nombre_completo,
+        "rol": (
+            usuario.rol.value
+            if hasattr(usuario.rol, "value")
+            else usuario.rol
+        ),
+    }
+
     # usuario = db.query(Usuario).filter(Usuario.id == int(user_id), Usuario.activo == True).first()
     # if not usuario:
     #     raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo")
     # return usuario
  
     # ── Placeholder hasta integrar DB ──
-    return {"id": int(user_id), "rol": payload.get("rol"), "username": payload.get("username")}
+    #return {"id": int(user_id), "rol": payload.get("rol"), "username": payload.get("username")}
  
  
 def requiere_rol(*roles: Rol):

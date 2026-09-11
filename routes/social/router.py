@@ -1,16 +1,500 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from database import get_db
+from uuid import UUID
 
-from models.social import Consentimiento, GeolocalizacionProductor, Lengua, Notificacion, PerfilSocioeconomico, Productor, ProductorLengua, ProductorPractica, PuebloOriginario, RedIntercambio, SeguridadAlimentaria, TipoProductor, VulnerabilidadClimatica 
-
+from models.social import Consentimiento, GeolocalizacionProductor, Lengua, Notificacion, PerfilSocioeconomico, ProductorLengua, ProductorPractica, PuebloOriginario, RedIntercambio, SeguridadAlimentaria, TipoProductor, VulnerabilidadClimatica, TecnicoCampo, TecnicoProductor, Investigador
+from models.core import Productor
 from models.agronomico import PracticaAgricola, TipoPractica
+from models.sistema import Usuario
 
 import schemas.social as schemes
 import schemas.agronomico as agronomico_schemes
+from schemas.usuarios import Rol
+
+from core.security import hash_password, requiere_rol
 
 router = APIRouter()
+
+solo_admin = requiere_rol(Rol.administrador)
+admin_o_investigador = requiere_rol(Rol.administrador, Rol.investigador)
+
+
+# ============================================================
+# TECNICOS 
+# ============================================================
+
+@router.post(
+    "/tecnicos",
+    response_model=schemes.TecnicoCampoRespuesta,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(admin_o_investigador)],
+    tags=["Tecnico de campo"]
+)
+def crear_tecnico(
+    datos: schemes.TecnicoCampoCrear,
+    db: Session = Depends(get_db)
+):
+    usuario_existente = db.query(Usuario).filter(
+        (Usuario.username == datos.username) |
+        (Usuario.email == datos.email)
+    ).first()
+
+    if usuario_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El username o email ya está registrado"
+        )
+
+    nuevo_usuario = Usuario(
+        username=datos.username,
+        email=datos.email,
+        hashed_password=hash_password(datos.password),
+        nombre_completo=datos.nombre_completo,
+        rol=Rol.tecnico_campo
+    )
+
+    db.add(nuevo_usuario)
+    db.flush()
+
+    nuevo_tecnico = TecnicoCampo(
+        user_id=nuevo_usuario.id,
+        institucion=datos.institucion,
+        especialidad=datos.especialidad,
+        notas=datos.notas
+    )
+
+    db.add(nuevo_tecnico)
+
+    try:
+        db.commit()
+
+        db.refresh(nuevo_usuario)
+        db.refresh(nuevo_tecnico)
+
+    except IntegrityError:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fue posible crear el técnico de campo"
+        )
+
+    return {
+        "id": nuevo_tecnico.id,
+        "user_id": nuevo_usuario.id,
+        "username": nuevo_usuario.username,
+        "email": nuevo_usuario.email,
+        "nombre_completo": nuevo_usuario.nombre_completo,
+        "rol": (
+            nuevo_usuario.rol.value
+            if hasattr(nuevo_usuario.rol, "value")
+            else nuevo_usuario.rol
+        ),
+        "activo": nuevo_usuario.activo,
+        "institucion": nuevo_tecnico.institucion,
+        "especialidad": nuevo_tecnico.especialidad,
+        "notas": nuevo_tecnico.notas
+    }
+    
+@router.get("/tecnicos", tags=["Tecnico de campo"])
+def listar_tecnicos(
+    db: Session = Depends(get_db)
+):
+    resultados = (
+        db.query(TecnicoCampo, Usuario)
+        .join(Usuario, TecnicoCampo.user_id == Usuario.id)
+        .filter(Usuario.rol == Rol.tecnico_campo)
+        .order_by(Usuario.nombre_completo)
+        .all()
+    )
+
+    return [
+        {
+            "id": tecnico.id,
+            "user_id": usuario.id,
+            "username": usuario.username,
+            "nombre_completo": usuario.nombre_completo,
+            "email": usuario.email,
+            "rol": (
+                usuario.rol.value
+                if hasattr(usuario.rol, "value")
+                else usuario.rol
+            ),
+            "activo": usuario.activo,
+            "institucion": tecnico.institucion,
+            "especialidad": tecnico.especialidad,
+            "notas": tecnico.notas,
+            "creado_en": usuario.creado_en,
+            "actualizado_en": usuario.actualizado_en,
+            "ultimo_acceso": usuario.ultimo_acceso,
+        }
+        for tecnico, usuario in resultados
+    ]
+
+# ============================================================
+# TECNICO -> PRODUCTOR
+# ============================================================
+
+@router.post(
+    "/tecnico-productor",
+    response_model=schemes.TecnicoProductorOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Tecnico de campo"] 
+)
+def asignar_productor_tecnico(
+    datos: schemes.TecnicoProductorCreate,
+    db: Session = Depends(get_db)
+):
+
+    tecnico = (
+        db.query(TecnicoCampo)
+        .filter(TecnicoCampo.id == datos.tecnico_campo_id)
+        .first()
+    )
+
+    if not tecnico:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Técnico de campo no encontrado"
+        )
+
+    productor = (
+        db.query(Productor)
+        .filter(Productor.id == datos.productor_id)
+        .first()
+    )
+
+    if not productor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Productor no encontrado"
+        )
+
+    existente = (
+        db.query(TecnicoProductor)
+        .filter(
+            TecnicoProductor.tecnico_campo_id == datos.tecnico_campo_id,
+            TecnicoProductor.productor_id == datos.productor_id
+        )
+        .first()
+    )
+
+    if existente:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El productor ya está asignado a este técnico"
+        )
+
+    relacion = TecnicoProductor(
+        tecnico_campo_id=datos.tecnico_campo_id,
+        productor_id=datos.productor_id,
+        estado=datos.estado or "activo",
+        notas=datos.notas,
+    )
+
+    try:
+
+        db.add(relacion)
+        db.commit()
+        db.refresh(relacion)
+
+    except Exception as e:
+
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    return relacion
+
+
+# ============================================================
+# LISTAR ASIGNACIONES
+# ============================================================
+
+@router.get(
+    "/tecnico-productor",
+    response_model=list[schemes.TecnicoProductorOut],
+    tags=["Tecnico de campo"]
+)
+def listar_asignaciones(
+    db: Session = Depends(get_db)
+):
+
+    return (
+        db.query(TecnicoProductor)
+        .order_by(TecnicoProductor.fecha_asignacion.desc())
+        .all()
+    )
+
+
+# ============================================================
+# PRODUCTORES DE UN TECNICO
+# ============================================================
+
+@router.get(
+    "/tecnico-productor/tecnico/{tecnico_id}",
+    response_model=list[schemes.TecnicoProductorOut],
+    tags=["Tecnico de campo"]
+)
+def listar_productores_tecnico(
+    tecnico_id: UUID,
+    db: Session = Depends(get_db)
+):
+
+    tecnico = (
+        db.query(TecnicoCampo)
+        .filter(TecnicoCampo.id == tecnico_id)
+        .first()
+    )
+
+    if not tecnico:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Técnico de campo no encontrado"
+        )
+
+    return (
+        db.query(TecnicoProductor)
+        .filter(
+            TecnicoProductor.tecnico_campo_id == tecnico_id,
+            TecnicoProductor.estado == "activo"
+        )
+        .order_by(TecnicoProductor.fecha_asignacion.desc())
+        .all()
+    )
+
+
+# ============================================================
+# TECNICOS DE UN PRODUCTOR
+# ============================================================
+
+@router.get(
+    "/tecnico-productor/productor/{productor_id}",
+    response_model=list[schemes.TecnicoProductorOut],
+    tags=["Tecnico de campo"]
+)
+def listar_tecnicos_productor(
+    productor_id: UUID,
+    db: Session = Depends(get_db)
+):
+
+    productor = (
+        db.query(Productor)
+        .filter(Productor.id == productor_id)
+        .first()
+    )
+
+    if not productor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Productor no encontrado"
+        )
+
+    return (
+        db.query(TecnicoProductor)
+        .filter(
+            TecnicoProductor.productor_id == productor_id,
+            TecnicoProductor.estado == "activo"
+        )
+        .order_by(TecnicoProductor.fecha_asignacion.desc())
+        .all()
+    )
+
+# ============================================================
+# INVESTIGADORES
+# ============================================================#======================== Investigadores ======================
+
+@router.post(
+    "/investigadores",
+    response_model=schemes.InvestigadorRespuesta,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(solo_admin)],
+    tags=["Investigador"]
+)
+def crear_investigador(
+    datos: schemes.InvestigadorCrear,
+    db: Session = Depends(get_db)
+):
+    """
+    Crea un usuario con rol investigador
+    y su perfil en social.investigador.
+    Solo administradores.
+    """
+
+    # 1. Verificar username o email duplicado
+    usuario_existente = db.query(Usuario).filter(
+        (Usuario.username == datos.username) |
+        (Usuario.email == datos.email)
+    ).first()
+
+    if usuario_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El username o email ya está registrado"
+        )
+
+    # 2. Crear usuario
+    nuevo_usuario = Usuario(
+        username=datos.username,
+        email=datos.email,
+        hashed_password=hash_password(datos.password),
+        nombre_completo=datos.nombre_completo,
+        rol=Rol.investigador
+    )
+
+    db.add(nuevo_usuario)
+
+    # Obtener UUID antes de crear el perfil investigador
+    db.flush()
+
+    # 3. Crear perfil de investigador
+    nuevo_investigador = Investigador(
+        user_id=nuevo_usuario.id,
+        institucion=datos.institucion,
+        especialidad=datos.especialidad,
+        orcid=datos.orcid,
+        pais=datos.pais,
+        notas=datos.notas
+    )
+
+    db.add(nuevo_investigador)
+
+    # 4. Guardar ambos registros
+    try:
+        db.commit()
+
+        db.refresh(nuevo_usuario)
+        db.refresh(nuevo_investigador)
+
+    except IntegrityError:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fue posible crear el investigador"
+        )
+
+    # 5. Respuesta
+    return {
+        "id": nuevo_investigador.id,
+        "user_id": nuevo_usuario.id,
+        "username": nuevo_usuario.username,
+        "email": nuevo_usuario.email,
+        "nombre_completo": nuevo_usuario.nombre_completo,
+        "rol": (
+            nuevo_usuario.rol.value
+            if hasattr(nuevo_usuario.rol, "value")
+            else nuevo_usuario.rol
+        ),
+        "institucion": nuevo_investigador.institucion,
+        "especialidad": nuevo_investigador.especialidad,
+        "orcid": nuevo_investigador.orcid,
+        "pais": nuevo_investigador.pais,
+        "notas": nuevo_investigador.notas
+    }
+
+@router.get(
+    "/investigadores",
+    tags=["Investigador"]
+)
+def listar_investigadores(
+    db: Session = Depends(get_db)
+):
+    resultados = (
+        db.query(Investigador, Usuario)
+        .join(
+            Usuario,
+            Investigador.user_id == Usuario.id
+        )
+        .filter(
+            Usuario.rol == Rol.investigador
+        )
+        .order_by(Usuario.nombre_completo)
+        .all()
+    )
+
+    return [
+        {
+            "id": investigador.id,
+            "user_id": usuario.id,
+            "username": usuario.username,
+            "nombre_completo": usuario.nombre_completo,
+            "email": usuario.email,
+            "rol": (
+                usuario.rol.value
+                if hasattr(usuario.rol, "value")
+                else usuario.rol
+            ),
+            "activo": usuario.activo,
+            "institucion": investigador.institucion,
+            "especialidad": investigador.especialidad,
+            "orcid": investigador.orcid,
+            "pais": investigador.pais,
+            "notas": investigador.notas,
+            "creado_en": usuario.creado_en,
+            "actualizado_en": usuario.actualizado_en,
+            "ultimo_acceso": usuario.ultimo_acceso,
+        }
+        for investigador, usuario in resultados
+    ]
+
+@router.delete(
+    "/investigadores/{investigador_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(solo_admin)],
+    tags=["Investigador"]
+)
+def eliminar_investigador(
+    investigador_id: UUID,
+    db: Session = Depends(get_db)
+):
+    # Buscar investigador
+    investigador = (
+        db.query(Investigador)
+        .filter(Investigador.id == investigador_id)
+        .first()
+    )
+
+    if not investigador:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Investigador no encontrado"
+        )
+
+    # Buscar usuario asociado
+    usuario = (
+        db.query(Usuario)
+        .filter(Usuario.id == investigador.user_id)
+        .first()
+    )
+
+    try:
+        # Eliminar investigador
+        db.delete(investigador)
+
+        # Eliminar usuario asociado
+        if usuario:
+            db.delete(usuario)
+
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No fue posible eliminar el investigador: {str(e)}"
+        )
+
+    return None
+    
+
 
 # =================== CATALOGO: TIPO PRODUCTOR ===================
 @router.get("/tipo_productor")

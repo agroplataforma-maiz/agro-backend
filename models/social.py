@@ -1,7 +1,6 @@
-
-from sqlalchemy import DECIMAL, Boolean, Column, Date, ForeignKey, Integer, SmallInteger, String, Text, TIMESTAMP, Computed, Table, MetaData
-from sqlalchemy.orm import relationship
+from sqlalchemy import DECIMAL, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey, Index, Integer, SmallInteger, String, Text, TIMESTAMP, UniqueConstraint, Table, text
 from database import Base
+from sqlalchemy.dialects.postgresql import UUID
 
 metadata = Base.metadata
 
@@ -10,7 +9,7 @@ gastronomia_productor = Table(
     'gastronomia_productor',
     metadata,
     Column('gastronomia_id', Integer, ForeignKey('cultural.gastronomia_tradicional.id'), primary_key=True),
-    Column('productor_id', Integer, ForeignKey('social.productor.id'), primary_key=True),
+    Column('productor_id', UUID(as_uuid=True), ForeignKey('core.productor.id'), primary_key=True),
     Column('es_preparador', Boolean, default=False),
     schema='cultural'
 )
@@ -34,7 +33,6 @@ class Lengua(Base):
     clave_inali = Column(String(20))
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
-    pueblos = relationship("PuebloOriginario", back_populates="lengua")
 
 class PuebloOriginario(Base):
     __tablename__ = "pueblo_originario"
@@ -47,61 +45,102 @@ class PuebloOriginario(Base):
     municipios_presencia = Column(Text)
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
-    lengua = relationship("Lengua", back_populates="pueblos")
 
-class Productor(Base):
-    __tablename__ = "productor"
-    __table_args__ = {'schema': 'social'}
-    id = Column(Integer, primary_key=True, autoincrement=True)  # Identificador único del productor
-    nombres = Column(String(150), nullable=False)  # Nombres del productor
-    apellido_paterno = Column(String(100))  # Apellido paterno
-    apellido_materno = Column(String(100))  # Apellido materno
-    fecha_nacimiento = Column(Date, default=None)  # Fecha de nacimiento
-    genero = Column(
-        String(30),
-        nullable=True,
-        comment="Género del productor: masculino, femenino, no_binario, prefiere_no_decir"
+class ProductorUsuario(Base):
+    __tablename__ = "productor_usuario"
+    __table_args__ = {"schema": "social"}
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE"), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="CASCADE"), nullable=False, unique=True)
+    creado_en = Column(DateTime(timezone=True), server_default=text("now()"))
+    actualizado_en = Column(DateTime(timezone=True), server_default=text("now()"))
+
+class TecnicoCampo(Base):
+    __tablename__ = "tecnico_campo"
+    __table_args__ = {"schema": "social"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"),)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="CASCADE"), nullable=False, unique=True,)
+    institucion = Column(String(200))
+    especialidad = Column(String(150))
+    notas = Column(Text)
+    creado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+    actualizado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+
+    
+class TecnicoProductor(Base):
+    __tablename__ = "tecnico_productor"
+    __table_args__ = (
+        UniqueConstraint(
+            "tecnico_campo_id",
+            "productor_id",
+            name="tecnico_productor_tecnico_productor_key",
+        ),
+        CheckConstraint(
+            "estado IN ('activo', 'suspendido', 'finalizado')",
+            name="tecnico_productor_estado_check",
+        ),
+        CheckConstraint(
+            "fecha_finalizacion IS NULL "
+            "OR fecha_finalizacion >= fecha_asignacion",
+            name="tecnico_productor_fechas_check",
+        ),
+        CheckConstraint(
+            "(estado = 'finalizado' AND fecha_finalizacion IS NOT NULL) "
+            "OR (estado <> 'finalizado' AND fecha_finalizacion IS NULL)",
+            name="tecnico_productor_finalizacion_check",
+        ),
+        Index(
+            "idx_tecnico_productor_activo_tecnico",
+            "tecnico_campo_id",
+            "productor_id",
+            postgresql_where=text("estado = 'activo'"),
+        ),
+        Index(
+            "idx_tecnico_productor_activo_productor",
+            "productor_id",
+            "tecnico_campo_id",
+            postgresql_where=text("estado = 'activo'"),
+        ),
+        {"schema": "social"},
     )
-    estado_civil = Column(
-        String(30),
-        nullable=True,
-        comment="Estado civil: soltero, casado, union_libre, divorciado, viudo, otro"
-    )
-    anios_experiencia = Column(SmallInteger)  # Años de experiencia en la actividad
-    telefono = Column(String(20))  # Teléfono de contacto
-    correo_electronico = Column(String(150), default=None)  # Correo electrónico (opcional)
-    tipo_productor_id = Column(Integer, ForeignKey('catalogo.tipo_productor.id', ondelete="SET NULL", onupdate="CASCADE"), nullable=True)  # FK tipo de productor
-    municipio_id = Column(Integer, ForeignKey('catalogo.municipio.id', ondelete="SET NULL", onupdate="CASCADE"), nullable=True)  # FK municipio
-    localidad_id = Column(Integer, ForeignKey('catalogo.localidad.id', ondelete="SET NULL", onupdate="CASCADE"), nullable=True)  # FK localidad
-    fecha_registro = Column(Date, default=None)  # Fecha de registro de datos
-    created_at = Column(TIMESTAMP, server_default="now()")  # Timestamp de creación
-    updated_at = Column(TIMESTAMP, server_default="now()")  # Timestamp de actualización
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"),)
+    tecnico_campo_id = Column(UUID(as_uuid=True), ForeignKey("social.tecnico_campo.id", onupdate="CASCADE", ondelete="RESTRICT"), nullable=False,)
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", onupdate="CASCADE", ondelete="RESTRICT"), nullable=False,)
+    estado = Column(String(20), nullable=False, server_default=text("'activo'"))
+    fecha_asignacion = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"),)
+    fecha_finalizacion = Column(DateTime(timezone=True))
+    notas = Column(Text)
+    motivo_finalizacion = Column(Text)
+    asignado_por_usuario_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", onupdate="CASCADE", ondelete="SET NULL"),)
+    finalizado_por_usuario_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", onupdate="CASCADE", ondelete="SET NULL"),)
+    creado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+    actualizado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 class ProductorPractica(Base):
     __tablename__ = "productor_practica"
     __table_args__ = {'schema': 'social'}
-    productor_id = Column(Integer, ForeignKey('social.productor.id'), primary_key=True)
-    practica_id = Column(Integer, ForeignKey('catalogo.practica_agricola.id'), primary_key=True)
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    practica_id = Column(Integer, ForeignKey("catalogo.practica_agricola.id", ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
 
 class ProductorLengua(Base):
     __tablename__ = "productor_lengua"
     __table_args__ = {'schema': 'social'}
-    productor_id = Column(Integer, ForeignKey('social.productor.id'), primary_key=True)
-    lengua_id = Column(Integer, ForeignKey('catalogo.lengua.id'), primary_key=True)
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    lengua_id = Column(Integer, ForeignKey("catalogo.lengua.id", ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     es_materna = Column(Boolean, default=False)
 
 class Consentimiento(Base):
     __tablename__ = "consentimiento"
     __table_args__ = {'schema': 'social'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     fecha = Column(Date)
     tipo = Column(String(20))
     autoriza_foto = Column(Boolean, default=False)
     autoriza_datos = Column(Boolean, default=False)
     autoriza_publicacion = Column(Boolean, default=False)
     observaciones = Column(Text)
-    registrado_por = Column(String(150))
+    registrado_por = Column(UUID(as_uuid=True), ForeignKey("social.tecnico_campo.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
 
@@ -109,7 +148,7 @@ class PerfilSocioeconomico(Base):
     __tablename__ = "perfil_socioeconomico"
     __table_args__ = {'schema': 'social'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'), unique=True)
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"), unique=True)
     escolaridad = Column(String(30))
     escolaridad_otra = Column(String(100))
     superficie_total_ha = Column(DECIMAL(8,4))
@@ -131,7 +170,7 @@ class SeguridadAlimentaria(Base):
     __tablename__ = "seguridad_alimentaria"
     __table_args__ = {'schema': 'social'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     num_personas_hogar = Column(SmallInteger)
     num_hombres_adultos = Column(SmallInteger)
     num_mujeres_adultas = Column(SmallInteger)
@@ -153,8 +192,10 @@ class SeguridadAlimentaria(Base):
     elcsa_comio_menos = Column(SmallInteger)
     elcsa_sintio_hambre = Column(SmallInteger)
     elcsa_dejo_comer_dia = Column(SmallInteger)
-    elcsa_puntaje_total = Column(SmallInteger, Computed("<expresion>"))  
-    nivel_inseguridad = Column(String(30), Computed("<expresion>")) 
+    elcsa_puntaje_total = Column(SmallInteger)
+    nivel_inseguridad = Column(String(30))
+    #elcsa_puntaje_total = Column(SmallInteger, Computed("<expresion>"))  
+    #nivel_inseguridad = Column(String(30), Computed("<expresion>")) 
     fecha_evaluacion = Column(Date)
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
@@ -163,7 +204,7 @@ class RedIntercambio(Base):
     __tablename__ = "red_intercambio"
     __table_args__ = {'schema': 'social'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     frecuencia_intercambio_semilla = Column(String(30))
     participa_ferias_semillas = Column(Boolean, default=False)
     ferias_descripcion = Column(Text)
@@ -183,7 +224,7 @@ class VulnerabilidadClimatica(Base):
     __tablename__ = "vulnerabilidad_climatica"
     __table_args__ = {'schema': 'social'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     # ...campos omitidos por brevedad...
     updated_at = Column(TIMESTAMP)
 
@@ -191,15 +232,15 @@ class GeolocalizacionProductor(Base):
     __tablename__ = "geolocalizacion_productor"
     __table_args__ = {'schema': 'social'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     # ...campos omitidos por brevedad...
     updated_at = Column(TIMESTAMP)
 
 class Notificacion(Base):
     __tablename__ = "notificacion"
-    __table_args__ = {'schema': 'social'}
+    __table_args__ = {'schema': 'sistema'}
     id = Column(Integer, primary_key=True, autoincrement=True)
-    usuario_id = Column(Integer, ForeignKey('auth.usuarios.id', ondelete="CASCADE"), nullable=True)
+    usuario_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="CASCADE"), nullable=True)
     titulo = Column(String(200), nullable=False)
     mensaje = Column(Text, nullable=False)
     tipo = Column(String(50), default='informacion', comment="Tipo: informacion, alerta, recordatorio, aviso")
@@ -207,3 +248,18 @@ class Notificacion(Base):
     fecha_envio = Column(TIMESTAMP, server_default="now()")
     created_at = Column(TIMESTAMP, server_default="now()")
     updated_at = Column(TIMESTAMP, server_default="now()")
+
+class Investigador(Base):
+    __tablename__ = "investigador"
+    __table_args__ = {"schema": "social"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="CASCADE"), nullable=False, unique=True)
+    institucion = Column(String(200))
+    especialidad = Column(String(150))
+    orcid = Column(String(30))
+    pais = Column(String(80))
+    notas = Column(Text)
+    creado_en = Column(DateTime(timezone=True), server_default=text("now()"))
+    actualizado_en = Column(
+    DateTime(timezone=True), server_default=text("now()"))        

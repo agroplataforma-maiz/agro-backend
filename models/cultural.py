@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, SmallInteger, String, Text, TIMESTAMP
-from sqlalchemy.orm import relationship
 from database import Base
+from sqlalchemy.dialects.postgresql import UUID
 
 class TipoRitualAgricola(Base):
 	__tablename__ = "tipo_ritual_agricola"
@@ -62,7 +62,7 @@ class SaberTradicional(Base):
     __tablename__ = "saber_tradicional"
     __table_args__ = {'schema': 'cultural'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     comunidad_id = Column(Integer, ForeignKey('catalogo.comunidad.id'))
     categoria_saber_agricola_id = Column(Integer, ForeignKey('catalogo.categoria_saber_agricola.id'))
     descripcion = Column(Text)
@@ -119,7 +119,7 @@ class NarrativaOral(Base):
     __table_args__ = {'schema': 'cultural'}
     id = Column(Integer, primary_key=True)
     comunidad_id = Column(Integer, ForeignKey('catalogo.comunidad.id'))
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     tipo_narrativa_oral_id = Column(Integer, ForeignKey('catalogo.tipo_narrativa_oral.id'))
     titulo = Column(String(200))
     titulo_lengua_orig = Column(String(200))
@@ -160,7 +160,7 @@ class TransmisionConocimiento(Base):
     __tablename__ = "transmision_conocimiento"
     __table_args__ = {'schema': 'cultural'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     # Agrega aquí los campos según el modelo
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
@@ -169,7 +169,7 @@ class IdentidadCultural(Base):
     __tablename__ = "identidad_cultural"
     __table_args__ = {'schema': 'cultural'}
     id = Column(Integer, primary_key=True)
-    productor_id = Column(Integer, ForeignKey('social.productor.id'))
+    productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     # Agrega aquí los campos según el modelo
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
