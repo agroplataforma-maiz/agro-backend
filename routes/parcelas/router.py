@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.core import Parcela
 from models.core import Productor
-from models.social import TecnicoCampo, TecnicoProductor
+from models.social import TecnicoCampo, TecnicoProductor, ProductorUsuario
 from schemas.geoespacial import ParcelaCreate, ParcelaRespuesta
 from core.security import get_usuario_actual, requiere_rol
 from schemas.usuarios import Rol
@@ -43,33 +43,48 @@ def crear_parcela(
     db: Session = Depends(get_db),
     usuario_actual=Depends(get_usuario_actual)
 ):
-    rol = usuario_actual["rol"]
+    rol = str(usuario_actual["rol"])
 
-    if rol not in [Rol.productor, Rol.tecnico_campo]:
+    # ============================================================
+    # VALIDAR ROL
+    # ============================================================
+
+    if rol not in [Rol.productor.value, Rol.tecnico_campo.value]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo un productor o un técnico de campo puede registrar una parcela"
         )
 
-        if rol == Rol.productor:
-             productor = (
-                 db.query(Productor)
-                 .filter(Productor.user_id == usuario_actual["id"])
-                 .first()
+    # ============================================================
+    # VALIDACIÓN DEL PRODUCTOR
+    # ============================================================
+
+    if rol == Rol.productor.value:
+
+        productor_usuario = (
+            db.query(ProductorUsuario)
+            .filter(ProductorUsuario.user_id == usuario_actual["id"])
+            .first()
         )
 
-        if not productor:
+        if not productor_usuario:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="El usuario productor no tiene un perfil de productor registrado"
             )
 
-        if productor.id != datos.productor_id:
+        if productor_usuario.productor_id != datos.productor_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Un productor solo puede registrar parcelas propias"
             )
-    if rol == Rol.tecnico_campo:
+
+    # ============================================================
+    # VALIDACIÓN DEL TÉCNICO
+    # ============================================================
+
+    if rol == Rol.tecnico_campo.value:
+
         tecnico = (
             db.query(TecnicoCampo)
             .filter(TecnicoCampo.user_id == usuario_actual["id"])
@@ -96,7 +111,11 @@ def crear_parcela(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="El productor no está asignado a este técnico de campo"
-            )        
+            )
+
+    # ============================================================
+    # VERIFICAR QUE EL PRODUCTOR EXISTA
+    # ============================================================
 
     productor = (
         db.query(Productor)
@@ -109,6 +128,10 @@ def crear_parcela(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Productor no encontrado"
         )
+
+    # ============================================================
+    # CREAR PARCELA
+    # ============================================================
 
     try:
 
@@ -213,23 +236,27 @@ def crear_parcela(
         "actualizado_en": parcela.actualizado_en,
     }
 
-
 # ============================================================
-# LISTAR TODAS LAS PARCELAS
+# LISTAR PARCELAS
 # ============================================================
 
-@router.get("")
+@router.get(
+    "",
+    response_model=list[ParcelaRespuesta],
+    summary="Listar parcelas",
+    description="Obtiene todas las parcelas registradas en la plataforma."
+)
 def listar_parcelas(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    usuario_actual=Depends(get_usuario_actual)
 ):
-
     parcelas = (
         db.query(Parcela)
         .order_by(Parcela.creado_en.desc())
         .all()
     )
 
-    resultados = []
+    resultado = []
 
     for parcela in parcelas:
 
@@ -244,43 +271,92 @@ def listar_parcelas(
             {"id": parcela.id}
         ).scalar()
 
-        resultados.append(
-            {
-                "id": parcela.id,
-                "nombre": parcela.nombre,
-                "superficie_ha": parcela.superficie_ha,
-                "sistema_manejo_id": parcela.sistema_manejo_id,
-                "tenencia": parcela.tenencia,
-                "topografia": parcela.topografia,
-                "productor_id": parcela.productor_id,
-                "ubicacion_id": parcela.ubicacion_id,
-                "poligono": poligono_wkt,
-                "densidad_plantas_ha": parcela.densidad_plantas_ha,
-                "observaciones_sitio": parcela.observaciones_sitio,
-                "creado_en": parcela.creado_en,
-                "actualizado_en": parcela.actualizado_en,
-            }
-        )
+        resultado.append({
+            "id": parcela.id,
+            "nombre": parcela.nombre,
+            "superficie_ha": parcela.superficie_ha,
+            "sistema_manejo_id": parcela.sistema_manejo_id,
+            "tenencia": parcela.tenencia,
+            "topografia": parcela.topografia,
+            "productor_id": parcela.productor_id,
+            "ubicacion_id": parcela.ubicacion_id,
+            "poligono": poligono_wkt,
+            "densidad_plantas_ha": parcela.densidad_plantas_ha,
+            "observaciones_sitio": parcela.observaciones_sitio,
+            "creado_en": parcela.creado_en,
+            "actualizado_en": parcela.actualizado_en,
+        })
 
-    return {
-        "count": len(resultados),
-        "results": resultados
-    }
-
+    return resultado
 
 # ============================================================
-# OBTENER PARCELA POR ID
+# LISTAR TODAS LAS PARCELAS
 # ============================================================
 
 @router.get(
-    "/{parcela_id}",
-    response_model=ParcelaRespuesta
+    "/todas",
+    response_model=list[ParcelaRespuesta],
+    summary="Listar todas las parcelas",
+    description="Obtiene todas las parcelas registradas en la base de datos."
 )
-def obtener_parcela(
-    parcela_id: UUID,
+def listar_todas_las_parcelas(
     db: Session = Depends(get_db)
 ):
+    parcelas = (
+        db.query(Parcela)
+        .order_by(Parcela.creado_en.desc())
+        .all()
+    )
 
+    resultado = []
+
+    for parcela in parcelas:
+
+        poligono_wkt = db.execute(
+            text(
+                """
+                SELECT ST_AsText(poligono)
+                FROM core.parcela
+                WHERE id = :id
+                """
+            ),
+            {"id": parcela.id}
+        ).scalar()
+
+        resultado.append({
+            "id": parcela.id,
+            "nombre": parcela.nombre,
+            "superficie_ha": parcela.superficie_ha,
+            "sistema_manejo_id": parcela.sistema_manejo_id,
+            "tenencia": parcela.tenencia,
+            "topografia": parcela.topografia,
+            "productor_id": parcela.productor_id,
+            "ubicacion_id": parcela.ubicacion_id,
+            "poligono": poligono_wkt,
+            "densidad_plantas_ha": parcela.densidad_plantas_ha,
+            "observaciones_sitio": parcela.observaciones_sitio,
+            "creado_en": parcela.creado_en,
+            "actualizado_en": parcela.actualizado_en,
+        })
+
+    return resultado
+
+# ============================================================
+# ASIGNAR UBICACIÓN A PARCELA
+# ============================================================
+
+@router.put(
+    "/{parcela_id}/ubicacion",
+    response_model=ParcelaRespuesta,
+    summary="Asignar ubicación a parcela",
+    description="Asigna una ubicación POINT existente a una parcela."
+)
+def asignar_ubicacion_parcela(
+    parcela_id: UUID,
+    ubicacion_id: UUID,
+    db: Session = Depends(get_db),
+    usuario_actual=Depends(get_usuario_actual)
+):
     parcela = (
         db.query(Parcela)
         .filter(Parcela.id == parcela_id)
@@ -293,235 +369,38 @@ def obtener_parcela(
             detail="Parcela no encontrada"
         )
 
-    poligono_wkt = db.execute(
+    ubicacion = db.execute(
         text(
             """
-            SELECT ST_AsText(poligono)
-            FROM core.parcela
-            WHERE id = :id
+            SELECT id
+            FROM core.ubicacion
+            WHERE id = :ubicacion_id
+              AND activo = TRUE
             """
         ),
-        {"id": parcela.id}
+        {"ubicacion_id": ubicacion_id}
     ).scalar()
 
-    return {
-        "id": parcela.id,
-        "nombre": parcela.nombre,
-        "superficie_ha": parcela.superficie_ha,
-        "sistema_manejo_id": parcela.sistema_manejo_id,
-        "tenencia": parcela.tenencia,
-        "topografia": parcela.topografia,
-        "productor_id": parcela.productor_id,
-        "ubicacion_id": parcela.ubicacion_id,
-        "poligono": poligono_wkt,
-        "densidad_plantas_ha": parcela.densidad_plantas_ha,
-        "observaciones_sitio": parcela.observaciones_sitio,
-        "creado_en": parcela.creado_en,
-        "actualizado_en": parcela.actualizado_en,
-    }
-
-
-# ============================================================
-# LISTAR PARCELAS DE UN PRODUCTOR
-# ============================================================
-
-@router.get(
-    "/productor/{productor_id}"
-)
-def listar_parcelas_productor(
-    productor_id: UUID,
-    db: Session = Depends(get_db)
-):
-
-    productor = (
-        db.query(Productor)
-        .filter(Productor.id == productor_id)
-        .first()
-    )
-
-    if not productor:
+    if not ubicacion:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Productor no encontrado"
+            detail="Ubicación no encontrada"
         )
 
-    parcelas = (
-        db.query(Parcela)
-        .filter(Parcela.productor_id == productor_id)
-        .order_by(Parcela.creado_en.desc())
-        .all()
-    )
-
-    resultados = []
-
-    for parcela in parcelas:
-
-        poligono_wkt = db.execute(
-            text(
-                """
-                SELECT ST_AsText(poligono)
-                FROM core.parcela
-                WHERE id = :id
-                """
-            ),
-            {"id": parcela.id}
-        ).scalar()
-
-        resultados.append(
-            {
-                "id": parcela.id,
-                "nombre": parcela.nombre,
-                "superficie_ha": parcela.superficie_ha,
-                "sistema_manejo_id": parcela.sistema_manejo_id,
-                "tenencia": parcela.tenencia,
-                "topografia": parcela.topografia,
-                "productor_id": parcela.productor_id,
-                "ubicacion_id": parcela.ubicacion_id,
-                "poligono": poligono_wkt,
-                "densidad_plantas_ha": parcela.densidad_plantas_ha,
-                "observaciones_sitio": parcela.observaciones_sitio,
-                "creado_en": parcela.creado_en,
-                "actualizado_en": parcela.actualizado_en,
-            }
-        )
-
-    return {
-        "productor_id": productor_id,
-        "count": len(resultados),
-        "results": resultados
-    }
-
-# ============================================================
-# CREAR PARCELA COMO TECNICO
-# ============================================================
-
-@router.post(
-    "/tecnico",
-    response_model=ParcelaRespuesta,
-    status_code=status.HTTP_201_CREATED
-)
-def crear_parcela_tecnico(
-    datos: ParcelaCreate,
-    db: Session = Depends(get_db),
-    usuario_actual=Depends(get_usuario_actual)
-):
-
-    tecnico = (
-        db.query(TecnicoCampo)
-        .filter(TecnicoCampo.user_id == usuario_actual["id"])
-        .first()
-    )
-
-    if not tecnico:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="El usuario actual no está registrado como técnico de campo"
-        )
-
-    productor = (
-        db.query(Productor)
-        .filter(Productor.id == datos.productor_id)
-        .first()
-    )
-
-    if not productor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Productor no encontrado"
-        )
-
-    asignacion = (
-        db.query(TecnicoProductor)
-        .filter(
-            TecnicoProductor.tecnico_campo_id == tecnico.id,
-            TecnicoProductor.productor_id == datos.productor_id,
-            TecnicoProductor.estado == "activo"
-        )
-        .first()
-    )
-
-    if not asignacion:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="El productor no está asignado a este técnico de campo"
-        )
+    parcela.ubicacion_id = ubicacion_id
 
     try:
-
-        resultado = db.execute(
-            text(
-                """
-                INSERT INTO core.parcela (
-                    nombre,
-                    superficie_ha,
-                    sistema_manejo_id,
-                    tenencia,
-                    topografia,
-                    productor_id,
-                    ubicacion_id,
-                    poligono,
-                    densidad_plantas_ha,
-                    observaciones_sitio
-                )
-                VALUES (
-                    :nombre,
-                    :superficie_ha,
-                    :sistema_manejo_id,
-                    :tenencia,
-                    :topografia,
-                    :productor_id,
-                    :ubicacion_id,
-                    ST_GeomFromText(:poligono, 4326),
-                    :densidad_plantas_ha,
-                    :observaciones_sitio
-                )
-                RETURNING id
-                """
-            ),
-            {
-                "nombre": datos.nombre,
-                "superficie_ha": datos.superficie_ha,
-                "sistema_manejo_id": datos.sistema_manejo_id,
-                "tenencia": datos.tenencia,
-                "topografia": datos.topografia,
-                "productor_id": datos.productor_id,
-                "ubicacion_id": datos.ubicacion_id,
-                "poligono": datos.poligono,
-                "densidad_plantas_ha": datos.densidad_plantas_ha,
-                "observaciones_sitio": datos.observaciones_sitio,
-            }
-        )
-
-        parcela_id = resultado.scalar_one()
-
         db.commit()
+        db.refresh(parcela)
 
     except Exception as e:
-
         db.rollback()
-
-        print(
-            "ERROR AL REGISTRAR PARCELA COMO TECNICO:",
-            repr(e)
-        )
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
-    parcela = (
-        db.query(Parcela)
-        .filter(Parcela.id == parcela_id)
-        .first()
-    )
-
-    if not parcela:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="La parcela fue creada pero no pudo recuperarse"
-        )
-        
     poligono_wkt = db.execute(
         text(
             """

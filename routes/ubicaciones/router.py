@@ -100,15 +100,34 @@ def crear_ubicacion(
 def listar_ubicaciones(
     db: Session = Depends(get_db)
 ):
-    ubicaciones = (
-        db.query(Ubicacion)
-        .order_by(Ubicacion.creado_en.desc())
-        .all()
-    )
+    ubicaciones = db.execute(
+        text("""
+            SELECT
+                id,
+                nombre,
+                tipo_ubicacion,
+                descripcion,
+                latitud,
+                longitud,
+                altitud_m,
+                altitud_fuente,
+                precision_gps,
+                municipio_id,
+                sistema_referencia,
+                fuente_captura_id,
+                tags,
+                activo,
+                creado_en,
+                actualizado_en,
+                ST_AsText(geom) AS geom
+            FROM core.ubicacion
+            ORDER BY creado_en DESC
+        """)
+    ).mappings().all()
 
     return {
         "count": len(ubicaciones),
-        "results": ubicaciones
+        "results": [dict(ubicacion) for ubicacion in ubicaciones]
     }
 
 
