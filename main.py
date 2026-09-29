@@ -71,7 +71,8 @@ app.include_router(social_router, prefix="/social")
 
 #app.include_router(cultural_router, prefix="/cultural", tags=["Cultural"])
 
-#app.include_router(agro_router, prefix="/agro", tags=["Agronómico"])
+app.include_router(agro_router, prefix="/agro")
+#, tags=["Agronómico"]
 
 #app.include_router(fenotipo_router, prefix="/fenotipo", tags=["Fenotipo"])
 

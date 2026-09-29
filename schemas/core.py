@@ -1,4 +1,6 @@
 from uuid import UUID
+from datetime import datetime, date
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -6,12 +8,14 @@ from pydantic import BaseModel, Field
 class OrganizacionCrear(BaseModel):
     nombre: str = Field(..., min_length=1, max_length=200)
     descripcion: str | None = None
+    propietario_id: UUID
 
 
 class OrganizacionRespuesta(BaseModel):
     id: UUID
     nombre: str
     descripcion: str | None = None
+    propietario_id: UUID
     activo: bool
 
     class Config:
@@ -26,7 +30,52 @@ class OrganizacionMiembroRespuesta(BaseModel):
     id: UUID
     organizacion_id: UUID
     usuario_id: UUID
+    fecha_ingreso: datetime
     activo: bool
+
+    class Config:
+        from_attributes = True
+
+# =================== SIEMBRA ===================
+
+class SiembraBase(BaseModel):
+    parcela_id: UUID
+    germoplasma_id: UUID
+    fecha_siembra: Optional[date] = None
+    fecha_corte: Optional[date] = None
+    fecha_cosecha: Optional[date] = None
+    densidad: Optional[float] = None
+    rendimiento_kg_ha: Optional[float] = None
+    ciclo_agricola: Optional[str] = None
+
+
+class SiembraCreate(SiembraBase):
+    pass
+
+
+class SiembraRespuesta(SiembraBase):
+    id: UUID
+    edad_dias: Optional[int] = None
+    edad_meses: Optional[int] = None
+    edad_anios: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+class OrganizacionPropietarioRespuesta(BaseModel):
+    organizacion_id: UUID
+    organizacion_nombre: str
+    propietario_id: UUID
+    propietario_nombre: str
+    propietario_email: str
+
+    class Config:
+        from_attributes = True
+
+class InvestigadorDisponibleRespuesta(BaseModel):
+    id: UUID
+    nombre_completo: str
+    email: str
 
     class Config:
         from_attributes = True

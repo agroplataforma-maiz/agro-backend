@@ -104,7 +104,7 @@ class ParcelaBase(BaseModel):
     sistema_manejo_id: Optional[int] = None
     tenencia: Optional[str] = None
     topografia: Optional[str] = None
-    productor_id: UUID
+    productor_id: Optional[UUID] = None
     ubicacion_id: Optional[UUID] = None
     poligono: str
     densidad_plantas_ha: Optional[int] = None

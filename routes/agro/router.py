@@ -1,12 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from uuid import UUID
+from datetime import date
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from database import get_db
 
+from models.geografico import HistorialParcela, ActividadCampo
+from models.core import Siembra
 from models.germoplasma import ColorGrano, RazaMaiz, EstadoConservacion, UsoMaiz
 from models.agronomico import TipoPractica, PracticaAgricola, SistemaManejo, SistemaCultivo, MetodoAlmacenamiento
 from models.social import ProductorPractica
 
+import schemas.geografico as geografico_schemas
+import schemas.core as core_schemas
 import schemas.germoplasma as germplasma_schemes
 import schemas.agronomico as agronomico_schemes
 
@@ -438,3 +445,299 @@ def eliminar_metodo_almacenamiento(metodo_id: int, db: Session = Depends(get_db)
     db.commit()
     return {"ok": True}
 
+
+# =================== SIEMBRA ===================
+
+@router.get("/siembra", tags=["Siembra"])
+def listar_siembras(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Siembra)
+
+    total = query.count()
+    siembras = query.offset(offset).limit(limit).all()
+
+    return {
+        "count": total,
+        "results": siembras
+    }
+
+
+@router.get(
+    "/siembra/{siembra_id}",
+    response_model=core_schemas.SiembraRespuesta,
+    tags=["Siembra"]
+)
+def obtener_siembra(
+    siembra_id: UUID,
+    db: Session = Depends(get_db)
+):
+    siembra = (
+        db.query(Siembra)
+        .filter(Siembra.id == siembra_id)
+        .first()
+    )
+
+    if not siembra:
+        raise HTTPException(
+            status_code=404,
+            detail="Siembra no encontrada"
+        )
+
+    edad_dias = None
+    edad_meses = None
+    edad_anios = None
+
+    if siembra.fecha_siembra:
+        if siembra.fecha_corte:
+            fecha_final = siembra.fecha_corte
+        elif siembra.fecha_cosecha:
+            fecha_final = siembra.fecha_cosecha
+        else:
+            fecha_final = date.today()
+
+        if fecha_final >= siembra.fecha_siembra:
+            edad_dias = (
+                fecha_final - siembra.fecha_siembra
+            ).days
+
+            edad_meses = edad_dias // 30
+            edad_anios = edad_dias // 365
+    
+    return {
+        "id": siembra.id,
+        "parcela_id": siembra.parcela_id,
+        "germoplasma_id": siembra.germoplasma_id,
+        "fecha_siembra": siembra.fecha_siembra,
+        "fecha_corte": siembra.fecha_corte,
+        "fecha_cosecha": siembra.fecha_cosecha,
+        "densidad": siembra.densidad,
+        "rendimiento_kg_ha": siembra.rendimiento_kg_ha,
+        "ciclo_agricola": siembra.ciclo_agricola,
+        "edad_dias": edad_dias,
+        "edad_meses": edad_meses,
+        "edad_anios": edad_anios
+    }
+
+@router.post(
+    "/siembra",
+    response_model=core_schemas.SiembraRespuesta,
+    tags=["Siembra"]
+)
+def crear_siembra(
+    siembra: core_schemas.SiembraCreate,
+    db: Session = Depends(get_db)
+):
+    db_siembra = Siembra(**siembra.dict())
+
+    db.add(db_siembra)
+    db.commit()
+    db.refresh(db_siembra)
+
+    return db_siembra
+
+
+@router.put(
+    "/siembra/{siembra_id}",
+    response_model=core_schemas.SiembraRespuesta,
+    tags=["Siembra"]
+)
+def actualizar_siembra(
+    siembra_id: UUID,
+    siembra: core_schemas.SiembraCreate,
+    db: Session = Depends(get_db)
+):
+    db_siembra = db.query(Siembra).filter(
+        Siembra.id == siembra_id
+    ).first()
+
+    if not db_siembra:
+        raise HTTPException(
+            status_code=404,
+            detail="Siembra no encontrada"
+        )
+
+    for key, value in siembra.dict().items():
+        setattr(db_siembra, key, value)
+
+    db.commit()
+    db.refresh(db_siembra)
+
+    return db_siembra
+
+
+@router.delete("/siembra/{siembra_id}", tags=["Siembra"])
+def eliminar_siembra(
+    siembra_id: UUID,
+    db: Session = Depends(get_db)
+):
+    db_siembra = db.query(Siembra).filter(
+        Siembra.id == siembra_id
+    ).first()
+
+    if not db_siembra:
+        raise HTTPException(
+            status_code=404,
+            detail="Siembra no encontrada"
+        )
+
+    db.delete(db_siembra)
+    db.commit()
+
+    return {"ok": True}
+
+# =================== ACTIVIDAD DE CAMPO ===================    
+
+@router.post(
+    "/visitas-campo/{visita_id}/actividades",
+    response_model=geografico_schemas.ActividadCampoRespuesta,
+    tags=["Actividad de campo"]
+)
+def crear_actividad_campo(
+    visita_id: int,
+    actividad: geografico_schemas.ActividadCampoCreate,
+    db: Session = Depends(get_db)
+):
+    visita = db.execute(
+        text("""
+            SELECT id
+            FROM geo.visita_campo
+            WHERE id = :visita_id
+        """),
+        {"visita_id": visita_id}
+    ).first()
+
+    if not visita:
+        raise HTTPException(
+            status_code=404,
+            detail="La visita de campo no existe"
+        )
+
+    practica = db.query(PracticaAgricola).filter(
+        PracticaAgricola.id == actividad.practica_id
+    ).first()
+
+    if not practica:
+        raise HTTPException(
+            status_code=404,
+            detail="La práctica agrícola no existe"
+        )
+
+    nueva_actividad = ActividadCampo(
+        visita_id=visita_id,
+        practica_id=actividad.practica_id,
+        fecha_actividad=actividad.fecha_actividad,
+        descripcion=actividad.descripcion,
+        observaciones=actividad.observaciones,
+        registrado_por=actividad.registrado_por
+    )
+
+    db.add(nueva_actividad)
+    db.commit()
+    db.refresh(nueva_actividad)
+
+    return nueva_actividad
+
+@router.get(
+    "/visitas-campo/{visita_id}/actividades",
+    response_model=list[geografico_schemas.ActividadCampoRespuesta],
+    tags=["Actividad de campo"]
+)
+def listar_actividades_campo(
+    visita_id: int,
+    db: Session = Depends(get_db)
+):
+    actividades = db.query(ActividadCampo).filter(
+        ActividadCampo.visita_id == visita_id
+    ).order_by(
+        ActividadCampo.fecha_actividad.asc(),
+        ActividadCampo.id.asc()
+    ).all()
+
+    return actividades
+
+@router.get(
+    "/actividad-campo/{actividad_id}",
+    response_model=geografico_schemas.ActividadCampoRespuesta,
+    tags=["Actividad de campo"]
+)
+def obtener_actividad_campo(
+    actividad_id: int,
+    db: Session = Depends(get_db)
+):
+    actividad = db.query(ActividadCampo).filter(
+        ActividadCampo.id == actividad_id
+    ).first()
+
+    if not actividad:
+        raise HTTPException(
+            status_code=404,
+            detail="La actividad de campo no existe"
+        )
+
+    return actividad
+
+@router.put(
+    "/actividad-campo/{actividad_id}",
+    response_model=geografico_schemas.ActividadCampoRespuesta,
+    tags=["Actividad de campo"]
+)
+def actualizar_actividad_campo(
+    actividad_id: int,
+    actividad_data: geografico_schemas.ActividadCampoCreate,
+    db: Session = Depends(get_db)
+):
+    actividad = db.query(ActividadCampo).filter(
+        ActividadCampo.id == actividad_id
+    ).first()
+
+    if not actividad:
+        raise HTTPException(
+            status_code=404,
+            detail="La actividad de campo no existe"
+        )
+
+    practica = db.query(PracticaAgricola).filter(
+        PracticaAgricola.id == actividad_data.practica_id
+    ).first()
+
+    if not practica:
+        raise HTTPException(
+            status_code=404,
+            detail="La práctica agrícola no existe"
+        )
+
+    actividad.practica_id = actividad_data.practica_id
+    actividad.fecha_actividad = actividad_data.fecha_actividad
+    actividad.descripcion = actividad_data.descripcion
+    actividad.observaciones = actividad_data.observaciones
+    actividad.registrado_por = actividad_data.registrado_por
+
+    db.commit()
+    db.refresh(actividad)
+
+    return actividad
+
+@router.delete("/actividad-campo/{actividad_id}", tags=["Actividad de campo"])
+def eliminar_actividad_campo(
+    actividad_id: int,
+    db: Session = Depends(get_db)
+):
+    actividad = db.query(ActividadCampo).filter(
+        ActividadCampo.id == actividad_id
+    ).first()
+
+    if not actividad:
+        raise HTTPException(
+            status_code=404,
+            detail="La actividad de campo no existe"
+        )
+
+    db.delete(actividad)
+    db.commit()
+
+    return {
+        "mensaje": "Actividad de campo eliminada correctamente"
+    }        

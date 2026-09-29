@@ -98,12 +98,13 @@ class Organizacion(Base):
     __tablename__ = "organizacion"
     __table_args__ = {"schema": "core"}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
-    nombre = Column(String(200), nullable=False, unique=True)
+    id = Column( UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    nombre = Column( String(200), nullable=False, unique=True)
     descripcion = Column(Text)
+    propietario_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="RESTRICT"), nullable=False)
     activo = Column(Boolean, nullable=False, server_default=text("true"))
     creado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
-    actualizado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+    actualizado_en = Column( DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 class OrganizacionMiembro(Base):
     __tablename__ = "organizacion_miembro"
@@ -114,3 +115,17 @@ class OrganizacionMiembro(Base):
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="CASCADE"), nullable=False)
     fecha_ingreso = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
     activo = Column(Boolean, nullable=False, server_default=text("true"))            
+
+class Siembra(Base):
+    __tablename__ = "siembra"
+    __table_args__ = {"schema": "core"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    parcela_id = Column(UUID(as_uuid=True), ForeignKey("core.parcela.id", ondelete="CASCADE"), nullable=False)
+    germoplasma_id = Column(UUID(as_uuid=True), ForeignKey("core.germoplasma.id", ondelete="CASCADE"), nullable=False)
+    fecha_siembra = Column(Date)
+    fecha_corte = Column(Date)
+    fecha_cosecha = Column(Date)
+    densidad = Column(Numeric)
+    rendimiento_kg_ha = Column(Numeric)
+    ciclo_agricola = Column(String(20))
