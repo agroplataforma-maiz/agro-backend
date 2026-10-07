@@ -157,3 +157,45 @@ def obtener_ubicacion(
         )
 
     return ubicacion
+
+# ============================================================
+# ELIMINAR UBICACION
+# ============================================================
+
+@router.delete(
+    "/{ubicacion_id}",
+    status_code=status.HTTP_200_OK
+)
+def eliminar_ubicacion(
+    ubicacion_id,
+    db: Session = Depends(get_db)
+):
+
+    ubicacion = (
+        db.query(Ubicacion)
+        .filter(Ubicacion.id == ubicacion_id)
+        .first()
+    )
+
+    if not ubicacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ubicación no encontrada"
+        )
+
+    try:
+        db.delete(ubicacion)
+        db.commit()
+
+    except Exception:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar la ubicación porque está siendo utilizada"
+        )
+
+    return {
+        "ok": True,
+        "mensaje": "Ubicación eliminada correctamente"
+    }

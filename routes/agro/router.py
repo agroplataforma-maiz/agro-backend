@@ -8,7 +8,7 @@ from database import get_db
 
 from models.geografico import HistorialParcela, ActividadCampo
 from models.core import Siembra
-from models.germoplasma import ColorGrano, RazaMaiz, EstadoConservacion, UsoMaiz
+from models.germoplasma import ColorGrano, RazaMaiz, EstadoConservacion, UsoMaiz, Germoplasma
 from models.agronomico import TipoPractica, PracticaAgricola, SistemaManejo, SistemaCultivo, MetodoAlmacenamiento
 from models.social import ProductorPractica
 
@@ -22,429 +22,526 @@ router = APIRouter()
 # GERMOPLASMA DE MAÍZ NATIVO
 
 # =================== CATALOGO: RAZA MAIZ ===================
-@router.get("/raza_maiz")
-def listar_razas(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
+# @router.get("/raza_maiz")
+# def listar_razas(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(RazaMaiz)
+#     total = query.count()
+#     razas = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": razas}
+
+# @router.get("/raza_maiz/{raza_id}", response_model=germplasma_schemes.RazaMaiz)
+# def obtener_raza(raza_id: int, db: Session = Depends(get_db)):
+# 	raza = db.query(RazaMaiz).filter(RazaMaiz.id == raza_id).first()
+# 	if not raza:
+# 		raise HTTPException(status_code=404, detail="Raza no encontrada")
+# 	return raza
+
+# @router.post("/raza_maiz", response_model=germplasma_schemes.RazaMaiz)
+# def crear_raza(raza: germplasma_schemes.RazaMaizCreate, db: Session = Depends(get_db)):
+# 	db_raza = RazaMaiz(**raza.dict())
+# 	db.add(db_raza)
+# 	db.commit()
+# 	db.refresh(db_raza)
+# 	return db_raza
+
+# @router.put("/raza_maiz/{raza_id}", response_model=germplasma_schemes.RazaMaiz)
+# def actualizar_raza(raza_id: int, raza: germplasma_schemes.RazaMaizCreate, db: Session = Depends(get_db)):
+# 	db_raza = db.query(RazaMaiz).filter(RazaMaiz.id == raza_id).first()
+# 	if not db_raza:
+# 		raise HTTPException(status_code=404, detail="Raza no encontrada")
+# 	for key, value in raza.dict().items():
+# 		setattr(db_raza, key, value)
+# 	db.commit()
+# 	db.refresh(db_raza)
+# 	return db_raza
+
+# @router.delete("/raza_maiz/{raza_id}")
+# def eliminar_raza(raza_id: int, db: Session = Depends(get_db)):
+# 	db_raza = db.query(RazaMaiz).filter(RazaMaiz.id == raza_id).first()
+# 	if not db_raza:
+# 		raise HTTPException(status_code=404, detail="Raza no encontrada")
+# 	db.delete(db_raza)
+# 	db.commit()
+# 	return {"ok": True}
+
+# # =================== CATALOGO: COLOR GRANO ===================
+# @router.get("/color_grano")
+# def listar_colores(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(ColorGrano)
+#     total = query.count()
+#     colores = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": colores}
+
+# @router.get("/color_grano/{color_id}", response_model=germplasma_schemes.ColorGrano)
+# def obtener_color(color_id: int, db: Session = Depends(get_db)):
+# 	color = db.query(ColorGrano).filter(ColorGrano.id == color_id).first()
+# 	if not color:
+# 		raise HTTPException(status_code=404, detail="Color no encontrado")
+# 	return color
+
+# @router.post("/color_grano", response_model=germplasma_schemes.ColorGrano)
+# def crear_color(color: germplasma_schemes.ColorGranoCreate, db: Session = Depends(get_db)):
+# 	db_color = ColorGrano(**color.dict())
+# 	db.add(db_color)
+# 	db.commit()
+# 	db.refresh(db_color)
+# 	return db_color
+
+# @router.put("/color_grano/{color_id}", response_model=germplasma_schemes.ColorGrano)
+# def actualizar_color(color_id: int, color: germplasma_schemes.ColorGranoCreate, db: Session = Depends(get_db)):
+# 	db_color = db.query(ColorGrano).filter(ColorGrano.id == color_id).first()
+# 	if not db_color:
+# 		raise HTTPException(status_code=404, detail="Color no encontrado")
+# 	for key, value in color.dict().items():
+# 		setattr(db_color, key, value)
+# 	db.commit()
+# 	db.refresh(db_color)
+# 	return db_color
+
+# @router.delete("/color_grano/{color_id}")
+# def eliminar_color(color_id: int, db: Session = Depends(get_db)):
+# 	db_color = db.query(ColorGrano).filter(ColorGrano.id == color_id).first()
+# 	if not db_color:
+# 		raise HTTPException(status_code=404, detail="Color no encontrado")
+# 	db.delete(db_color)
+# 	db.commit()
+# 	return {"ok": True}
+
+# # =================== CATALOGO: ESTADO CONSERVACION ===================
+# @router.get("/estado_conservacion")
+# def listar_estados_conservacion(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(EstadoConservacion)
+#     total = query.count()
+#     estados = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": estados}
+
+# @router.get("/estado_conservacion/{estado_id}", response_model=germplasma_schemes.EstadoConservacion)
+# def obtener_estado_conservacion(estado_id: int, db: Session = Depends(get_db)):
+# 	estado = db.query(EstadoConservacion).filter(EstadoConservacion.id == estado_id).first()
+# 	if not estado:
+# 		raise HTTPException(status_code=404, detail="Estado de conservación no encontrado")
+# 	return estado
+
+# @router.post("/estado_conservacion", response_model=germplasma_schemes.EstadoConservacion)
+# def crear_estado_conservacion(estado: germplasma_schemes.EstadoConservacionCreate, db: Session = Depends(get_db)):
+# 	db_estado = EstadoConservacion(**estado.dict())
+# 	db.add(db_estado)
+# 	db.commit()
+# 	db.refresh(db_estado)
+# 	return db_estado
+
+# @router.put("/estado_conservacion/{estado_id}", response_model=germplasma_schemes.EstadoConservacion)
+# def actualizar_estado_conservacion(estado_id: int, estado: germplasma_schemes.EstadoConservacionCreate, db: Session = Depends(get_db)):
+# 	db_estado = db.query(EstadoConservacion).filter(EstadoConservacion.id == estado_id).first()
+# 	if not db_estado:
+# 		raise HTTPException(status_code=404, detail="Estado de conservación no encontrado")
+# 	for key, value in estado.dict().items():
+# 		setattr(db_estado, key, value)
+# 	db.commit()
+# 	db.refresh(db_estado)
+# 	return db_estado
+
+# @router.delete("/estado_conservacion/{estado_id}")
+# def eliminar_estado_conservacion(estado_id: int, db: Session = Depends(get_db)):
+# 	db_estado = db.query(EstadoConservacion).filter(EstadoConservacion.id == estado_id).first()
+# 	if not db_estado:
+# 		raise HTTPException(status_code=404, detail="Estado de conservación no encontrado")
+# 	db.delete(db_estado)
+# 	db.commit()
+# 	return {"ok": True}
+
+# # =================== CATALOGO: USO MAIZ ===================
+# @router.get("/uso_maiz")
+# def listar_usos_maiz(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(UsoMaiz)
+#     total = query.count()
+#     usos = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": usos}
+
+# @router.get("/uso_maiz/{uso_id}", response_model=germplasma_schemes.UsoMaiz)
+# def obtener_uso_maiz(uso_id: int, db: Session = Depends(get_db)):
+# 	uso = db.query(UsoMaiz).filter(UsoMaiz.id == uso_id).first()
+# 	if not uso:
+# 		raise HTTPException(status_code=404, detail="Uso de maíz no encontrado")
+# 	return uso
+
+# @router.post("/uso_maiz", response_model=germplasma_schemes.UsoMaiz)
+# def crear_uso_maiz(uso: germplasma_schemes.UsoMaizCreate, db: Session = Depends(get_db)):
+# 	db_uso = UsoMaiz(**uso.dict())
+# 	db.add(db_uso)
+# 	db.commit()
+# 	db.refresh(db_uso)
+# 	return db_uso
+
+# @router.put("/uso_maiz/{uso_id}", response_model=germplasma_schemes.UsoMaiz)
+# def actualizar_uso_maiz(uso_id: int, uso: germplasma_schemes.UsoMaizCreate, db: Session = Depends(get_db)):
+# 	db_uso = db.query(UsoMaiz).filter(UsoMaiz.id == uso_id).first()
+# 	if not db_uso:
+# 		raise HTTPException(status_code=404, detail="Uso de maíz no encontrado")
+# 	for key, value in uso.dict().items():
+# 		setattr(db_uso, key, value)
+# 	db.commit()
+# 	db.refresh(db_uso)
+# 	return db_uso
+
+# @router.delete("/uso_maiz/{uso_id}")
+# def eliminar_uso_maiz(uso_id: int, db: Session = Depends(get_db)):
+# 	db_uso = db.query(UsoMaiz).filter(UsoMaiz.id == uso_id).first()
+# 	if not db_uso:
+# 		raise HTTPException(status_code=404, detail="Uso de maíz no encontrado")
+# 	db.delete(db_uso)
+# 	db.commit()
+# 	return {"ok": True}
+
+# # =================== CATALOGO: TIPO PRACTICA ===================
+# @router.get("/tipo_practica")
+# def listar_tipo_practica(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(TipoPractica)
+#     total = query.count()
+#     tipos = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": tipos}
+
+# @router.get("/tipo_practica/{tipo_id}", response_model=agronomico_schemes.TipoPractica)
+# def obtener_tipo_practica(tipo_id: int, db: Session = Depends(get_db)):
+#     tipo = db.query(TipoPractica).filter(TipoPractica.id == tipo_id).first()
+#     if not tipo:
+#         raise HTTPException(status_code=404, detail="Tipo de práctica no encontrado")
+#     return tipo
+
+# @router.post("/tipo_practica", response_model=agronomico_schemes.TipoPractica)
+# def crear_tipo_practica(tipo: agronomico_schemes.TipoPracticaCreate, db: Session = Depends(get_db)):
+#     db_tipo = TipoPractica(**tipo.dict())
+#     db.add(db_tipo)
+#     db.commit()
+#     db.refresh(db_tipo)
+#     return db_tipo
+
+# @router.put("/tipo_practica/{tipo_id}", response_model=agronomico_schemes.TipoPractica)
+# def actualizar_tipo_practica(tipo_id: int, tipo: agronomico_schemes.TipoPracticaCreate, db: Session = Depends(get_db)):
+#     db_tipo = db.query(TipoPractica).filter(TipoPractica.id == tipo_id).first()
+#     if not db_tipo:
+#         raise HTTPException(status_code=404, detail="Tipo de práctica no encontrado")
+#     for key, value in tipo.dict().items():
+#         setattr(db_tipo, key, value)
+#     db.commit()
+#     db.refresh(db_tipo)
+#     return db_tipo
+
+# @router.delete("/tipo_practica/{tipo_id}")
+# def eliminar_tipo_practica(tipo_id: int, db: Session = Depends(get_db)):
+#     db_tipo = db.query(TipoPractica).filter(TipoPractica.id == tipo_id).first()
+#     if not db_tipo:
+#         raise HTTPException(status_code=404, detail="Tipo de práctica no encontrado")
+#     db.delete(db_tipo)
+#     db.commit()
+#     return {"ok": True}
+
+# # =================== CATALOGO: PRACTICA AGRICOLA ===================
+# @router.get("/practica_agricola")
+# def listar_practicas_agricolas(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(PracticaAgricola)
+#     total = query.count()
+#     practicas = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": practicas}
+
+# @router.get("/practica_agricola/{practica_id}", response_model=agronomico_schemes.PracticaAgricola)
+# def obtener_practica_agricola(practica_id: int, db: Session = Depends(get_db)):
+#     practica = db.query(PracticaAgricola).filter(PracticaAgricola.id == practica_id).first()
+#     if not practica:
+#         raise HTTPException(status_code=404, detail="Práctica agrícola no encontrada")
+#     return practica
+
+# @router.post("/practica_agricola", response_model=agronomico_schemes.PracticaAgricola)
+# def crear_practica_agricola(practica: agronomico_schemes.PracticaAgricolaCreate, db: Session = Depends(get_db)):
+#     db_practica = PracticaAgricola(**practica.dict())
+#     db.add(db_practica)
+#     db.commit()
+#     db.refresh(db_practica)
+#     return db_practica
+
+# @router.put("/practica_agricola/{practica_id}", response_model=agronomico_schemes.PracticaAgricola)
+# def actualizar_practica_agricola(practica_id: int, practica: agronomico_schemes.PracticaAgricolaCreate, db: Session = Depends(get_db)):
+#     db_practica = db.query(PracticaAgricola).filter(PracticaAgricola.id == practica_id).first()
+#     if not db_practica:
+#         raise HTTPException(status_code=404, detail="Práctica agrícola no encontrada")
+#     for key, value in practica.dict().items():
+#         setattr(db_practica, key, value)
+#     db.commit()
+#     db.refresh(db_practica)
+#     return db_practica
+
+# @router.delete("/practica_agricola/{practica_id}")
+# def eliminar_practica_agricola(practica_id: int, db: Session = Depends(get_db)):
+#     db_practica = db.query(PracticaAgricola).filter(PracticaAgricola.id == practica_id).first()
+#     if not db_practica:
+#         raise HTTPException(status_code=404, detail="Práctica agrícola no encontrada")
+#     db.delete(db_practica)
+#     db.commit()
+#     return {"ok": True}
+
+# # =================== CATALOGO: SISTEMA MANEJO ===================
+# @router.get("/sistema_manejo")
+# def listar_sistemas_manejo(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(SistemaManejo)
+#     total = query.count()
+#     sistemas = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": sistemas}
+
+# @router.get("/sistema_manejo/{sistema_id}", response_model=agronomico_schemes.SistemaManejo)
+# def obtener_sistema_manejo(sistema_id: int, db: Session = Depends(get_db)):
+#     sistema = db.query(SistemaManejo).filter(SistemaManejo.id == sistema_id).first()
+#     if not sistema:
+#         raise HTTPException(status_code=404, detail="Sistema de manejo no encontrado")
+#     return sistema
+
+# @router.post("/sistema_manejo", response_model=agronomico_schemes.SistemaManejo)
+# def crear_sistema_manejo(sistema: agronomico_schemes.SistemaManejoCreate, db: Session = Depends(get_db)):
+#     db_sistema = SistemaManejo(**sistema.dict())
+#     db.add(db_sistema)
+#     db.commit()
+#     db.refresh(db_sistema)
+#     return db_sistema
+
+# @router.put("/sistema_manejo/{sistema_id}", response_model=agronomico_schemes.SistemaManejo)
+# def actualizar_sistema_manejo(sistema_id: int, sistema: agronomico_schemes.SistemaManejoCreate, db: Session = Depends(get_db)):
+#     db_sistema = db.query(SistemaManejo).filter(SistemaManejo.id == sistema_id).first()
+#     if not db_sistema:
+#         raise HTTPException(status_code=404, detail="Sistema de manejo no encontrado")
+#     for key, value in sistema.dict().items():
+#         setattr(db_sistema, key, value)
+#     db.commit()
+#     db.refresh(db_sistema)
+#     return db_sistema
+
+# @router.delete("/sistema_manejo/{sistema_id}")
+# def eliminar_sistema_manejo(sistema_id: int, db: Session = Depends(get_db)):
+#     db_sistema = db.query(SistemaManejo).filter(SistemaManejo.id == sistema_id).first()
+#     if not db_sistema:
+#         raise HTTPException(status_code=404, detail="Sistema de manejo no encontrado")
+#     db.delete(db_sistema)
+#     db.commit()
+#     return {"ok": True}
+
+# # =================== CATALOGO: SISTEMA CULTIVO ===================
+# @router.get("/sistema_cultivo")
+# def listar_sistema_cultivo(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(SistemaCultivo)
+#     total = query.count()
+#     sistemas = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": sistemas}
+
+# @router.get("/sistema_cultivo/{sistema_id}", response_model=agronomico_schemes.SistemaCultivo)
+# def obtener_sistema_cultivo(sistema_id: int, db: Session = Depends(get_db)):
+#     sistema = db.query(SistemaCultivo).filter(SistemaCultivo.id == sistema_id).first()
+#     if not sistema:
+#         raise HTTPException(status_code=404, detail="Sistema de cultivo no encontrado")
+#     return sistema
+
+# @router.post("/sistema_cultivo", response_model=agronomico_schemes.SistemaCultivo)
+# def crear_sistema_cultivo(sistema: agronomico_schemes.SistemaCultivoCreate, db: Session = Depends(get_db)):
+#     db_sistema = SistemaCultivo(**sistema.dict())
+#     db.add(db_sistema)
+#     db.commit()
+#     db.refresh(db_sistema)
+#     return db_sistema
+
+# @router.put("/sistema_cultivo/{sistema_id}", response_model=agronomico_schemes.SistemaCultivo)
+# def actualizar_sistema_cultivo(sistema_id: int, sistema: agronomico_schemes.SistemaCultivoCreate, db: Session = Depends(get_db)):
+#     db_sistema = db.query(SistemaCultivo).filter(SistemaCultivo.id == sistema_id).first()
+#     if not db_sistema:
+#         raise HTTPException(status_code=404, detail="Sistema de cultivo no encontrado")
+#     for key, value in sistema.dict().items():
+#         setattr(db_sistema, key, value)
+#     db.commit()
+#     db.refresh(db_sistema)
+#     return db_sistema
+
+# @router.delete("/sistema_cultivo/{sistema_id}")
+# def eliminar_sistema_cultivo(sistema_id: int, db: Session = Depends(get_db)):
+#     db_sistema = db.query(SistemaCultivo).filter(SistemaCultivo.id == sistema_id).first()
+#     if not db_sistema:
+#         raise HTTPException(status_code=404, detail="Sistema de cultivo no encontrado")
+#     db.delete(db_sistema)
+#     db.commit()
+#     return {"ok": True}
+
+
+# # =================== CATALOGO: METODO ALMACENAMIENTO ===================
+# @router.get("/metodo_almacenamiento")
+# def listar_metodo_almacenamiento(
+#     limit: int = Query(100, ge=1, le=1000),
+#     offset: int = Query(0, ge=0),
+#     db: Session = Depends(get_db)
+# ):
+#     query = db.query(MetodoAlmacenamiento)
+#     total = query.count()
+#     metodos = query.offset(offset).limit(limit).all()
+#     return {"count": total, "results": metodos}
+
+# @router.get("/metodo_almacenamiento/{metodo_id}", response_model=agronomico_schemes.MetodoAlmacenamiento)
+# def obtener_metodo_almacenamiento(metodo_id: int, db: Session = Depends(get_db)):
+#     metodo = db.query(MetodoAlmacenamiento).filter(MetodoAlmacenamiento.id == metodo_id).first()
+#     if not metodo:
+#         raise HTTPException(status_code=404, detail="Método de almacenamiento no encontrado")
+#     return metodo
+
+# @router.post("/metodo_almacenamiento", response_model=agronomico_schemes.MetodoAlmacenamiento)
+# def crear_metodo_almacenamiento(metodo: agronomico_schemes.MetodoAlmacenamientoCreate, db: Session = Depends(get_db)):
+#     db_metodo = MetodoAlmacenamiento(**metodo.dict())
+#     db.add(db_metodo)
+#     db.commit()
+#     db.refresh(db_metodo)
+#     return db_metodo
+
+# @router.put("/metodo_almacenamiento/{metodo_id}", response_model=agronomico_schemes.MetodoAlmacenamiento)
+# def actualizar_metodo_almacenamiento(metodo_id: int, metodo: agronomico_schemes.MetodoAlmacenamientoCreate, db: Session = Depends(get_db)):
+#     db_metodo = db.query(MetodoAlmacenamiento).filter(MetodoAlmacenamiento.id == metodo_id).first()
+#     if not db_metodo:
+#         raise HTTPException(status_code=404, detail="Método de almacenamiento no encontrado")
+#     for key, value in metodo.dict().items():
+#         setattr(db_metodo, key, value)
+#     db.commit()
+#     db.refresh(db_metodo)
+#     return db_metodo
+
+# @router.delete("/metodo_almacenamiento/{metodo_id}")
+# def eliminar_metodo_almacenamiento(metodo_id: int, db: Session = Depends(get_db)):
+#     db_metodo = db.query(MetodoAlmacenamiento).filter(MetodoAlmacenamiento.id == metodo_id).first()
+#     if not db_metodo:
+#         raise HTTPException(status_code=404, detail="Método de almacenamiento no encontrado")
+#     db.delete(db_metodo)
+#     db.commit()
+#     return {"ok": True}
+
+
+# ============================================================
+# GERMOPLASMA
+# ============================================================
+
+@router.post(
+    "/germoplasma",
+    response_model=germplasma_schemes.GermoplasmaRespuesta,
+    status_code=201,
+    tags=["Germoplasma"]
+)
+def crear_germoplasma(
+    datos: germplasma_schemes.GermoplasmaCrear,
     db: Session = Depends(get_db)
 ):
-    query = db.query(RazaMaiz)
-    total = query.count()
-    razas = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": razas}
+    existente = (
+        db.query(Germoplasma)
+        .filter(Germoplasma.codigo_accesion == datos.codigo_accesion)
+        .first()
+    )
 
-@router.get("/raza_maiz/{raza_id}", response_model=germplasma_schemes.RazaMaiz)
-def obtener_raza(raza_id: int, db: Session = Depends(get_db)):
-	raza = db.query(RazaMaiz).filter(RazaMaiz.id == raza_id).first()
-	if not raza:
-		raise HTTPException(status_code=404, detail="Raza no encontrada")
-	return raza
+    if existente:
+        raise HTTPException(
+            status_code=409,
+            detail="El código de accesión ya está registrado"
+        )
 
-@router.post("/raza_maiz", response_model=germplasma_schemes.RazaMaiz)
-def crear_raza(raza: germplasma_schemes.RazaMaizCreate, db: Session = Depends(get_db)):
-	db_raza = RazaMaiz(**raza.dict())
-	db.add(db_raza)
-	db.commit()
-	db.refresh(db_raza)
-	return db_raza
+    germoplasma = Germoplasma(
+        codigo_accesion=datos.codigo_accesion,
+        nombre_local=datos.nombre_local,
+        nombre_lengua_orig=datos.nombre_lengua_orig,
+        raza_id=datos.raza_id,
+        color_grano_id=datos.color_grano_id,
+        ciclo_vegetativo=datos.ciclo_vegetativo,
+        duracion_dias=datos.duracion_dias,
+        estado_conservacion_id=datos.estado_conservacion_id,
+        origen_muestra_id=datos.origen_muestra_id,
+        comunidad_id=datos.comunidad_id,
+        ubicacion_id=datos.ubicacion_id,
+        colector_id=datos.colector_id,
+        notas=datos.notas,
+        fecha_registro=datos.fecha_registro
+    )
 
-@router.put("/raza_maiz/{raza_id}", response_model=germplasma_schemes.RazaMaiz)
-def actualizar_raza(raza_id: int, raza: germplasma_schemes.RazaMaizCreate, db: Session = Depends(get_db)):
-	db_raza = db.query(RazaMaiz).filter(RazaMaiz.id == raza_id).first()
-	if not db_raza:
-		raise HTTPException(status_code=404, detail="Raza no encontrada")
-	for key, value in raza.dict().items():
-		setattr(db_raza, key, value)
-	db.commit()
-	db.refresh(db_raza)
-	return db_raza
+    try:
+        db.add(germoplasma)
+        db.commit()
+        db.refresh(germoplasma)
 
-@router.delete("/raza_maiz/{raza_id}")
-def eliminar_raza(raza_id: int, db: Session = Depends(get_db)):
-	db_raza = db.query(RazaMaiz).filter(RazaMaiz.id == raza_id).first()
-	if not db_raza:
-		raise HTTPException(status_code=404, detail="Raza no encontrada")
-	db.delete(db_raza)
-	db.commit()
-	return {"ok": True}
+    except Exception as e:
+        db.rollback()
 
-# =================== CATALOGO: COLOR GRANO ===================
-@router.get("/color_grano")
-def listar_colores(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se pudo registrar el germoplasma: {str(e)}"
+        )
+
+    return germoplasma
+
+
+@router.get(
+    "/germoplasma",
+    response_model=list[germplasma_schemes.GermoplasmaRespuesta],
+    tags=["Germoplasma"]
+)
+def listar_germoplasma(
     db: Session = Depends(get_db)
 ):
-    query = db.query(ColorGrano)
-    total = query.count()
-    colores = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": colores}
+    return (
+        db.query(Germoplasma)
+        .order_by(Germoplasma.fecha_registro.desc())
+        .all()
+    )
 
-@router.get("/color_grano/{color_id}", response_model=germplasma_schemes.ColorGrano)
-def obtener_color(color_id: int, db: Session = Depends(get_db)):
-	color = db.query(ColorGrano).filter(ColorGrano.id == color_id).first()
-	if not color:
-		raise HTTPException(status_code=404, detail="Color no encontrado")
-	return color
 
-@router.post("/color_grano", response_model=germplasma_schemes.ColorGrano)
-def crear_color(color: germplasma_schemes.ColorGranoCreate, db: Session = Depends(get_db)):
-	db_color = ColorGrano(**color.dict())
-	db.add(db_color)
-	db.commit()
-	db.refresh(db_color)
-	return db_color
-
-@router.put("/color_grano/{color_id}", response_model=germplasma_schemes.ColorGrano)
-def actualizar_color(color_id: int, color: germplasma_schemes.ColorGranoCreate, db: Session = Depends(get_db)):
-	db_color = db.query(ColorGrano).filter(ColorGrano.id == color_id).first()
-	if not db_color:
-		raise HTTPException(status_code=404, detail="Color no encontrado")
-	for key, value in color.dict().items():
-		setattr(db_color, key, value)
-	db.commit()
-	db.refresh(db_color)
-	return db_color
-
-@router.delete("/color_grano/{color_id}")
-def eliminar_color(color_id: int, db: Session = Depends(get_db)):
-	db_color = db.query(ColorGrano).filter(ColorGrano.id == color_id).first()
-	if not db_color:
-		raise HTTPException(status_code=404, detail="Color no encontrado")
-	db.delete(db_color)
-	db.commit()
-	return {"ok": True}
-
-# =================== CATALOGO: ESTADO CONSERVACION ===================
-@router.get("/estado_conservacion")
-def listar_estados_conservacion(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
+@router.get(
+    "/germoplasma/{germoplasma_id}",
+    response_model=germplasma_schemes.GermoplasmaRespuesta,
+    tags=["Germoplasma"]
+)
+def obtener_germoplasma(
+    germoplasma_id: UUID,
     db: Session = Depends(get_db)
 ):
-    query = db.query(EstadoConservacion)
-    total = query.count()
-    estados = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": estados}
+    germoplasma = (
+        db.query(Germoplasma)
+        .filter(Germoplasma.id == germoplasma_id)
+        .first()
+    )
 
-@router.get("/estado_conservacion/{estado_id}", response_model=germplasma_schemes.EstadoConservacion)
-def obtener_estado_conservacion(estado_id: int, db: Session = Depends(get_db)):
-	estado = db.query(EstadoConservacion).filter(EstadoConservacion.id == estado_id).first()
-	if not estado:
-		raise HTTPException(status_code=404, detail="Estado de conservación no encontrado")
-	return estado
+    if not germoplasma:
+        raise HTTPException(
+            status_code=404,
+            detail="Germoplasma no encontrado"
+        )
 
-@router.post("/estado_conservacion", response_model=germplasma_schemes.EstadoConservacion)
-def crear_estado_conservacion(estado: germplasma_schemes.EstadoConservacionCreate, db: Session = Depends(get_db)):
-	db_estado = EstadoConservacion(**estado.dict())
-	db.add(db_estado)
-	db.commit()
-	db.refresh(db_estado)
-	return db_estado
-
-@router.put("/estado_conservacion/{estado_id}", response_model=germplasma_schemes.EstadoConservacion)
-def actualizar_estado_conservacion(estado_id: int, estado: germplasma_schemes.EstadoConservacionCreate, db: Session = Depends(get_db)):
-	db_estado = db.query(EstadoConservacion).filter(EstadoConservacion.id == estado_id).first()
-	if not db_estado:
-		raise HTTPException(status_code=404, detail="Estado de conservación no encontrado")
-	for key, value in estado.dict().items():
-		setattr(db_estado, key, value)
-	db.commit()
-	db.refresh(db_estado)
-	return db_estado
-
-@router.delete("/estado_conservacion/{estado_id}")
-def eliminar_estado_conservacion(estado_id: int, db: Session = Depends(get_db)):
-	db_estado = db.query(EstadoConservacion).filter(EstadoConservacion.id == estado_id).first()
-	if not db_estado:
-		raise HTTPException(status_code=404, detail="Estado de conservación no encontrado")
-	db.delete(db_estado)
-	db.commit()
-	return {"ok": True}
-
-# =================== CATALOGO: USO MAIZ ===================
-@router.get("/uso_maiz")
-def listar_usos_maiz(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
-):
-    query = db.query(UsoMaiz)
-    total = query.count()
-    usos = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": usos}
-
-@router.get("/uso_maiz/{uso_id}", response_model=germplasma_schemes.UsoMaiz)
-def obtener_uso_maiz(uso_id: int, db: Session = Depends(get_db)):
-	uso = db.query(UsoMaiz).filter(UsoMaiz.id == uso_id).first()
-	if not uso:
-		raise HTTPException(status_code=404, detail="Uso de maíz no encontrado")
-	return uso
-
-@router.post("/uso_maiz", response_model=germplasma_schemes.UsoMaiz)
-def crear_uso_maiz(uso: germplasma_schemes.UsoMaizCreate, db: Session = Depends(get_db)):
-	db_uso = UsoMaiz(**uso.dict())
-	db.add(db_uso)
-	db.commit()
-	db.refresh(db_uso)
-	return db_uso
-
-@router.put("/uso_maiz/{uso_id}", response_model=germplasma_schemes.UsoMaiz)
-def actualizar_uso_maiz(uso_id: int, uso: germplasma_schemes.UsoMaizCreate, db: Session = Depends(get_db)):
-	db_uso = db.query(UsoMaiz).filter(UsoMaiz.id == uso_id).first()
-	if not db_uso:
-		raise HTTPException(status_code=404, detail="Uso de maíz no encontrado")
-	for key, value in uso.dict().items():
-		setattr(db_uso, key, value)
-	db.commit()
-	db.refresh(db_uso)
-	return db_uso
-
-@router.delete("/uso_maiz/{uso_id}")
-def eliminar_uso_maiz(uso_id: int, db: Session = Depends(get_db)):
-	db_uso = db.query(UsoMaiz).filter(UsoMaiz.id == uso_id).first()
-	if not db_uso:
-		raise HTTPException(status_code=404, detail="Uso de maíz no encontrado")
-	db.delete(db_uso)
-	db.commit()
-	return {"ok": True}
-
-# =================== CATALOGO: TIPO PRACTICA ===================
-@router.get("/tipo_practica")
-def listar_tipo_practica(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
-):
-    query = db.query(TipoPractica)
-    total = query.count()
-    tipos = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": tipos}
-
-@router.get("/tipo_practica/{tipo_id}", response_model=agronomico_schemes.TipoPractica)
-def obtener_tipo_practica(tipo_id: int, db: Session = Depends(get_db)):
-    tipo = db.query(TipoPractica).filter(TipoPractica.id == tipo_id).first()
-    if not tipo:
-        raise HTTPException(status_code=404, detail="Tipo de práctica no encontrado")
-    return tipo
-
-@router.post("/tipo_practica", response_model=agronomico_schemes.TipoPractica)
-def crear_tipo_practica(tipo: agronomico_schemes.TipoPracticaCreate, db: Session = Depends(get_db)):
-    db_tipo = TipoPractica(**tipo.dict())
-    db.add(db_tipo)
-    db.commit()
-    db.refresh(db_tipo)
-    return db_tipo
-
-@router.put("/tipo_practica/{tipo_id}", response_model=agronomico_schemes.TipoPractica)
-def actualizar_tipo_practica(tipo_id: int, tipo: agronomico_schemes.TipoPracticaCreate, db: Session = Depends(get_db)):
-    db_tipo = db.query(TipoPractica).filter(TipoPractica.id == tipo_id).first()
-    if not db_tipo:
-        raise HTTPException(status_code=404, detail="Tipo de práctica no encontrado")
-    for key, value in tipo.dict().items():
-        setattr(db_tipo, key, value)
-    db.commit()
-    db.refresh(db_tipo)
-    return db_tipo
-
-@router.delete("/tipo_practica/{tipo_id}")
-def eliminar_tipo_practica(tipo_id: int, db: Session = Depends(get_db)):
-    db_tipo = db.query(TipoPractica).filter(TipoPractica.id == tipo_id).first()
-    if not db_tipo:
-        raise HTTPException(status_code=404, detail="Tipo de práctica no encontrado")
-    db.delete(db_tipo)
-    db.commit()
-    return {"ok": True}
-
-# =================== CATALOGO: PRACTICA AGRICOLA ===================
-@router.get("/practica_agricola")
-def listar_practicas_agricolas(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
-):
-    query = db.query(PracticaAgricola)
-    total = query.count()
-    practicas = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": practicas}
-
-@router.get("/practica_agricola/{practica_id}", response_model=agronomico_schemes.PracticaAgricola)
-def obtener_practica_agricola(practica_id: int, db: Session = Depends(get_db)):
-    practica = db.query(PracticaAgricola).filter(PracticaAgricola.id == practica_id).first()
-    if not practica:
-        raise HTTPException(status_code=404, detail="Práctica agrícola no encontrada")
-    return practica
-
-@router.post("/practica_agricola", response_model=agronomico_schemes.PracticaAgricola)
-def crear_practica_agricola(practica: agronomico_schemes.PracticaAgricolaCreate, db: Session = Depends(get_db)):
-    db_practica = PracticaAgricola(**practica.dict())
-    db.add(db_practica)
-    db.commit()
-    db.refresh(db_practica)
-    return db_practica
-
-@router.put("/practica_agricola/{practica_id}", response_model=agronomico_schemes.PracticaAgricola)
-def actualizar_practica_agricola(practica_id: int, practica: agronomico_schemes.PracticaAgricolaCreate, db: Session = Depends(get_db)):
-    db_practica = db.query(PracticaAgricola).filter(PracticaAgricola.id == practica_id).first()
-    if not db_practica:
-        raise HTTPException(status_code=404, detail="Práctica agrícola no encontrada")
-    for key, value in practica.dict().items():
-        setattr(db_practica, key, value)
-    db.commit()
-    db.refresh(db_practica)
-    return db_practica
-
-@router.delete("/practica_agricola/{practica_id}")
-def eliminar_practica_agricola(practica_id: int, db: Session = Depends(get_db)):
-    db_practica = db.query(PracticaAgricola).filter(PracticaAgricola.id == practica_id).first()
-    if not db_practica:
-        raise HTTPException(status_code=404, detail="Práctica agrícola no encontrada")
-    db.delete(db_practica)
-    db.commit()
-    return {"ok": True}
-
-# =================== CATALOGO: SISTEMA MANEJO ===================
-@router.get("/sistema_manejo")
-def listar_sistemas_manejo(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
-):
-    query = db.query(SistemaManejo)
-    total = query.count()
-    sistemas = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": sistemas}
-
-@router.get("/sistema_manejo/{sistema_id}", response_model=agronomico_schemes.SistemaManejo)
-def obtener_sistema_manejo(sistema_id: int, db: Session = Depends(get_db)):
-    sistema = db.query(SistemaManejo).filter(SistemaManejo.id == sistema_id).first()
-    if not sistema:
-        raise HTTPException(status_code=404, detail="Sistema de manejo no encontrado")
-    return sistema
-
-@router.post("/sistema_manejo", response_model=agronomico_schemes.SistemaManejo)
-def crear_sistema_manejo(sistema: agronomico_schemes.SistemaManejoCreate, db: Session = Depends(get_db)):
-    db_sistema = SistemaManejo(**sistema.dict())
-    db.add(db_sistema)
-    db.commit()
-    db.refresh(db_sistema)
-    return db_sistema
-
-@router.put("/sistema_manejo/{sistema_id}", response_model=agronomico_schemes.SistemaManejo)
-def actualizar_sistema_manejo(sistema_id: int, sistema: agronomico_schemes.SistemaManejoCreate, db: Session = Depends(get_db)):
-    db_sistema = db.query(SistemaManejo).filter(SistemaManejo.id == sistema_id).first()
-    if not db_sistema:
-        raise HTTPException(status_code=404, detail="Sistema de manejo no encontrado")
-    for key, value in sistema.dict().items():
-        setattr(db_sistema, key, value)
-    db.commit()
-    db.refresh(db_sistema)
-    return db_sistema
-
-@router.delete("/sistema_manejo/{sistema_id}")
-def eliminar_sistema_manejo(sistema_id: int, db: Session = Depends(get_db)):
-    db_sistema = db.query(SistemaManejo).filter(SistemaManejo.id == sistema_id).first()
-    if not db_sistema:
-        raise HTTPException(status_code=404, detail="Sistema de manejo no encontrado")
-    db.delete(db_sistema)
-    db.commit()
-    return {"ok": True}
-
-# =================== CATALOGO: SISTEMA CULTIVO ===================
-@router.get("/sistema_cultivo")
-def listar_sistema_cultivo(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
-):
-    query = db.query(SistemaCultivo)
-    total = query.count()
-    sistemas = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": sistemas}
-
-@router.get("/sistema_cultivo/{sistema_id}", response_model=agronomico_schemes.SistemaCultivo)
-def obtener_sistema_cultivo(sistema_id: int, db: Session = Depends(get_db)):
-    sistema = db.query(SistemaCultivo).filter(SistemaCultivo.id == sistema_id).first()
-    if not sistema:
-        raise HTTPException(status_code=404, detail="Sistema de cultivo no encontrado")
-    return sistema
-
-@router.post("/sistema_cultivo", response_model=agronomico_schemes.SistemaCultivo)
-def crear_sistema_cultivo(sistema: agronomico_schemes.SistemaCultivoCreate, db: Session = Depends(get_db)):
-    db_sistema = SistemaCultivo(**sistema.dict())
-    db.add(db_sistema)
-    db.commit()
-    db.refresh(db_sistema)
-    return db_sistema
-
-@router.put("/sistema_cultivo/{sistema_id}", response_model=agronomico_schemes.SistemaCultivo)
-def actualizar_sistema_cultivo(sistema_id: int, sistema: agronomico_schemes.SistemaCultivoCreate, db: Session = Depends(get_db)):
-    db_sistema = db.query(SistemaCultivo).filter(SistemaCultivo.id == sistema_id).first()
-    if not db_sistema:
-        raise HTTPException(status_code=404, detail="Sistema de cultivo no encontrado")
-    for key, value in sistema.dict().items():
-        setattr(db_sistema, key, value)
-    db.commit()
-    db.refresh(db_sistema)
-    return db_sistema
-
-@router.delete("/sistema_cultivo/{sistema_id}")
-def eliminar_sistema_cultivo(sistema_id: int, db: Session = Depends(get_db)):
-    db_sistema = db.query(SistemaCultivo).filter(SistemaCultivo.id == sistema_id).first()
-    if not db_sistema:
-        raise HTTPException(status_code=404, detail="Sistema de cultivo no encontrado")
-    db.delete(db_sistema)
-    db.commit()
-    return {"ok": True}
-
-
-# =================== CATALOGO: METODO ALMACENAMIENTO ===================
-@router.get("/metodo_almacenamiento")
-def listar_metodo_almacenamiento(
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
-):
-    query = db.query(MetodoAlmacenamiento)
-    total = query.count()
-    metodos = query.offset(offset).limit(limit).all()
-    return {"count": total, "results": metodos}
-
-@router.get("/metodo_almacenamiento/{metodo_id}", response_model=agronomico_schemes.MetodoAlmacenamiento)
-def obtener_metodo_almacenamiento(metodo_id: int, db: Session = Depends(get_db)):
-    metodo = db.query(MetodoAlmacenamiento).filter(MetodoAlmacenamiento.id == metodo_id).first()
-    if not metodo:
-        raise HTTPException(status_code=404, detail="Método de almacenamiento no encontrado")
-    return metodo
-
-@router.post("/metodo_almacenamiento", response_model=agronomico_schemes.MetodoAlmacenamiento)
-def crear_metodo_almacenamiento(metodo: agronomico_schemes.MetodoAlmacenamientoCreate, db: Session = Depends(get_db)):
-    db_metodo = MetodoAlmacenamiento(**metodo.dict())
-    db.add(db_metodo)
-    db.commit()
-    db.refresh(db_metodo)
-    return db_metodo
-
-@router.put("/metodo_almacenamiento/{metodo_id}", response_model=agronomico_schemes.MetodoAlmacenamiento)
-def actualizar_metodo_almacenamiento(metodo_id: int, metodo: agronomico_schemes.MetodoAlmacenamientoCreate, db: Session = Depends(get_db)):
-    db_metodo = db.query(MetodoAlmacenamiento).filter(MetodoAlmacenamiento.id == metodo_id).first()
-    if not db_metodo:
-        raise HTTPException(status_code=404, detail="Método de almacenamiento no encontrado")
-    for key, value in metodo.dict().items():
-        setattr(db_metodo, key, value)
-    db.commit()
-    db.refresh(db_metodo)
-    return db_metodo
-
-@router.delete("/metodo_almacenamiento/{metodo_id}")
-def eliminar_metodo_almacenamiento(metodo_id: int, db: Session = Depends(get_db)):
-    db_metodo = db.query(MetodoAlmacenamiento).filter(MetodoAlmacenamiento.id == metodo_id).first()
-    if not db_metodo:
-        raise HTTPException(status_code=404, detail="Método de almacenamiento no encontrado")
-    db.delete(db_metodo)
-    db.commit()
-    return {"ok": True}
-
+    return germoplasma
 
 # =================== SIEMBRA ===================
 

@@ -28,8 +28,8 @@ class Municipio(Base):
 	latitud_centroide = Column(DECIMAL(10,7))
 	longitud_centroide = Column(DECIMAL(10,7))
 	superficie_km2 = Column(DECIMAL(10,2))
-	created_at = Column(TIMESTAMP)
-	updated_at = Column(TIMESTAMP)
+	created_at = Column("creado_en", TIMESTAMP(timezone=True), nullable=False)
+	updated_at = Column("actualizado_en", TIMESTAMP(timezone=True), nullable=False)
 
 class Localidad(Base):
 	__tablename__ = "localidad"

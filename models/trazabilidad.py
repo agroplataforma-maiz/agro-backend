@@ -90,6 +90,28 @@ class TrazabilidadFuente(Base):
     es_informacion = Column(Boolean, server_default=text("false"))
     creado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
     actualizado_en = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+	
+class OrigenMaterialAgricola(Base):
+    __tablename__ = "origen_material_agricola"
+    __table_args__ = {"schema": "trazabilidad"}
+
+    id = Column(Integer, primary_key=True)
+    codigo = Column(String(20), unique=True, nullable=False)
+    nombre = Column(String(80), unique=True, nullable=False)
+    descripcion = Column(Text)
+    tipo = Column(String(30), nullable=False)
+    sub_tipo = Column(String(30))
+    creado_en = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()")
+    )
+    actualizado_en = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()")
+    )
+
 
 class Multimedia(Base):
     __tablename__ = "multimedia"

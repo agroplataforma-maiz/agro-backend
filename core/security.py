@@ -59,8 +59,6 @@ def decodificar_token(token: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
  
- 
- 
 # ═══════════════════════════════════════════════════════
 # DEPENDENCIAS
 # ═══════════════════════════════════════════════════════
@@ -113,16 +111,7 @@ def get_usuario_actual(
             else usuario.rol
         ),
     }
-
-    # usuario = db.query(Usuario).filter(Usuario.id == int(user_id), Usuario.activo == True).first()
-    # if not usuario:
-    #     raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo")
-    # return usuario
- 
-    # ── Placeholder hasta integrar DB ──
-    #return {"id": int(user_id), "rol": payload.get("rol"), "username": payload.get("username")}
- 
- 
+     
 def requiere_rol(*roles: Rol):
     """Decorador de dependencia para restringir por rol."""
     def verificar(usuario=Depends(get_usuario_actual)):

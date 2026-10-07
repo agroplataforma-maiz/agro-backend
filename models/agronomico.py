@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 class TipoPractica(Base):
 	__tablename__ = "tipo_practica"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -14,6 +15,7 @@ class TipoPractica(Base):
 class PracticaAgricola(Base):
 	__tablename__ = "practica_agricola"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(150), nullable=False)
 	descripcion = Column(Text)
@@ -23,6 +25,7 @@ class PracticaAgricola(Base):
 class SistemaManejo(Base):
 	__tablename__ = "sistema_manejo"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(100), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -33,6 +36,7 @@ class SistemaManejo(Base):
 class SistemaCultivo(Base):
 	__tablename__ = "sistema_cultivo"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -42,6 +46,7 @@ class SistemaCultivo(Base):
 class MetodoAlmacenamiento(Base):
 	__tablename__ = "metodo_almacenamiento"
 	__table_args__ = {"schema": "catalogo"}
+	
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
 	descripcion = Column(Text)

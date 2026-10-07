@@ -1,19 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 
 
 from database import get_db
-from models.core import Organizacion, OrganizacionMiembro
+from models.core import Organizacion, OrganizacionMiembro, Comunidad
 from models.sistema import Usuario
-from schemas.core import OrganizacionCrear, OrganizacionRespuesta, OrganizacionMiembroCrear, OrganizacionMiembroRespuesta, OrganizacionPropietarioRespuesta, InvestigadorDisponibleRespuesta
+from models.territorio import Municipio
+from schemas.core import OrganizacionCrear, OrganizacionRespuesta, OrganizacionMiembroCrear, OrganizacionMiembroRespuesta, OrganizacionPropietarioRespuesta, InvestigadorDisponibleRespuesta, ComunidadCrear, ComunidadRespuesta
 from core.security import requiere_rol, get_usuario_actual
 from schemas.usuarios import Rol
-
+import schemas.core as core_schemas
 
 router = APIRouter()
 
 solo_admin = requiere_rol(Rol.administrador)
+
+#===============================================
+# ORGANIZACIONES
+#===============================================
 
 @router.get(
     "/organizaciones/investigadores-disponibles",
@@ -468,3 +473,295 @@ def desactivar_organizacion(
     db.refresh(organizacion)
 
     return organizacion
+
+# ============================================================
+# COMUNIDADES
+# ============================================================
+
+@router.get("/comunidades/municipios",
+tags=["Comunidades"])
+def listar_municipios(
+    db: Session = Depends(get_db)
+):
+    municipios = (
+        db.query(Municipio)
+        .order_by(Municipio.nombre)
+        .all()
+    )
+
+    return [
+        {
+            "id": municipio.id,
+            "nombre": municipio.nombre
+        }
+        for municipio in municipios
+    ]
+# =================== COMUNIDADES ===================
+
+@router.get("/comunidades", tags=["Comunidades"])
+def listar_comunidades(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Comunidad)
+
+    total = query.count()
+
+    comunidades = (
+        query
+        .order_by(Comunidad.nombre.asc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "count": total,
+        "results": comunidades
+    }
+
+@router.get(
+    "/comunidades/tipos",
+    tags=["Comunidades"]
+)
+def listar_tipos_comunidad():
+    return [
+        "indigena",
+        "campesina",
+        "ejidal",
+        "mestiza",
+        "mixta",
+        "urbana",
+        "rancheria",
+        "otro"
+    ]
+
+@router.get(
+    "/comunidades/{comunidad_id}",
+    tags=["Comunidades"]
+)
+def obtener_comunidad(
+    comunidad_id: UUID,
+    db: Session = Depends(get_db)
+):
+    comunidad = (
+        db.query(Comunidad)
+        .filter(Comunidad.id == comunidad_id)
+        .first()
+    )
+
+    if not comunidad:
+        raise HTTPException(
+            status_code=404,
+            detail="Comunidad no encontrada"
+        )
+
+    return comunidad
+
+
+@router.post(
+    "/comunidades",
+    tags=["Comunidades"],
+    status_code=201
+)
+def crear_comunidad(
+    comunidad: ComunidadCrear,
+    db: Session = Depends(get_db)
+):
+    existente = (
+        db.query(Comunidad)
+        .filter(
+            Comunidad.nombre == comunidad.nombre,
+            Comunidad.municipio_id == comunidad.municipio_id
+        )
+        .first()
+    )
+
+    if existente:
+        raise HTTPException(
+            status_code=409,
+            detail="Ya existe una comunidad con ese nombre en ese municipio"
+        )
+
+    nueva_comunidad = Comunidad(
+        **comunidad.dict()
+    )
+
+    db.add(nueva_comunidad)
+
+    try:
+        db.commit()
+        db.refresh(nueva_comunidad)
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"No fue posible crear la comunidad: {str(e)}"
+        )
+
+    return nueva_comunidad
+
+
+@router.put(
+    "/comunidades/{comunidad_id}",
+    tags=["Comunidades"]
+)
+def actualizar_comunidad(
+    comunidad_id: UUID,
+    comunidad: ComunidadCrear,
+    db: Session = Depends(get_db)
+):
+    db_comunidad = (
+        db.query(Comunidad)
+        .filter(Comunidad.id == comunidad_id)
+        .first()
+    )
+
+    if not db_comunidad:
+        raise HTTPException(
+            status_code=404,
+            detail="Comunidad no encontrada"
+        )
+
+    for key, value in comunidad.dict().items():
+        setattr(db_comunidad, key, value)
+
+    try:
+        db.commit()
+        db.refresh(db_comunidad)
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"No fue posible actualizar la comunidad: {str(e)}"
+        )
+
+    return db_comunidad
+
+
+@router.delete(
+    "/comunidades/{comunidad_id}",
+    tags=["Comunidades"]
+)
+def eliminar_comunidad(
+    comunidad_id: UUID,
+    db: Session = Depends(get_db)
+):
+    comunidad = (
+        db.query(Comunidad)
+        .filter(Comunidad.id == comunidad_id)
+        .first()
+    )
+
+    if not comunidad:
+        raise HTTPException(
+            status_code=404,
+            detail="Comunidad no encontrada"
+        )
+
+    try:
+        db.delete(comunidad)
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se puede eliminar la comunidad: {str(e)}"
+        )
+
+    return {
+        "ok": True,
+        "mensaje": "Comunidad eliminada correctamente"
+    }
+@router.post(
+    "/comunidades",
+    response_model=ComunidadRespuesta,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Comunidades"]
+)
+def crear_comunidad(
+    datos: ComunidadCrear,
+    db: Session = Depends(get_db)
+):
+    # Verificar si ya existe
+    existente = (
+        db.query(Comunidad)
+        .filter(
+            Comunidad.nombre.ilike(datos.nombre),
+            Comunidad.municipio_id == datos.municipio_id
+        )
+        .first()
+    )
+
+    if existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe una comunidad con ese nombre en ese municipio"
+        )
+
+    comunidad = Comunidad(
+        nombre=datos.nombre,
+        nombre_lengua_orig=datos.nombre_lengua_orig,
+        tipo=datos.tipo,
+        municipio_id=datos.municipio_id,
+        ubicacion_id=datos.ubicacion_id,
+        presencia_maiz_nativo=datos.presencia_maiz_nativo,
+        presencia_historica_maiz=datos.presencia_historica_maiz,
+        diversidad_ecologica_score=datos.diversidad_ecologica_score,
+        riqueza_cultural_score=datos.riqueza_cultural_score,
+        prioridad_muestreo=datos.prioridad_muestreo,
+        poblacion_total=datos.poblacion_total,
+        num_localidades=datos.num_localidades,
+        fuente=datos.fuente
+    )
+
+    db.add(comunidad)
+    db.commit()
+    db.refresh(comunidad)
+
+    return comunidad
+
+@router.get(
+    "/comunidades",
+    response_model=list[ComunidadRespuesta],
+    tags=["Comunidades"]
+)
+def listar_comunidades(
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(Comunidad)
+        .filter(Comunidad.activo.is_(True))
+        .order_by(Comunidad.nombre)
+        .all()
+    )
+
+@router.get(
+    "/comunidades/{comunidad_id}",
+    response_model=ComunidadRespuesta,
+    tags=["Comunidades"]
+)
+def obtener_comunidad(
+    comunidad_id: UUID,
+    db: Session = Depends(get_db)
+):
+    comunidad = (
+        db.query(Comunidad)
+        .filter(
+            Comunidad.id == comunidad_id,
+            Comunidad.activo.is_(True)
+        )
+        .first()
+    )
+
+    if not comunidad:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comunidad no encontrada"
+        )
+
+    return comunidad

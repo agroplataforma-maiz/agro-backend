@@ -5,7 +5,6 @@ from geoalchemy2 import Geometry
 from database import Base
  
 class Parcela(Base):
-
     __tablename__ = "parcela"
     __table_args__ = {"schema": "core"}
 
@@ -25,7 +24,6 @@ class Parcela(Base):
 
 
 class Ubicacion(Base):
-
     __tablename__ = "ubicacion"
     __table_args__ = {"schema": "core"}
 
@@ -51,6 +49,7 @@ class Ubicacion(Base):
 class Productor(Base):
     __tablename__ = "productor"
     __table_args__ = {'schema': 'core'}
+
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))  # Identificador único del productor
     nombres = Column(String(150), nullable=False)  # Nombres del productor
     apellido_paterno = Column(String(100))  # Apellido paterno

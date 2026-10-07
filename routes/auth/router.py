@@ -122,10 +122,13 @@ def login(
     Login con email O username + password.
     Devuelve JWT Bearer token.
     """
-    ident = datos.identificador.strip().lower()
+    ident = datos.identificador.strip()
 
     es_email = "@" in ident
-    filtro = Usuario.email == ident if es_email else Usuario.username == ident
+    if es_email:
+        filtro = Usuario.email.ilike(ident)
+    else:
+        filtro = Usuario.username.ilike(ident)
 
     usuario = (
         db.query(Usuario)

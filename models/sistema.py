@@ -8,6 +8,7 @@ from schemas.usuarios import Rol
 class Usuario(Base):
     __tablename__ = "usuario"
     __table_args__ = {"schema": "sistema"}
+    
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)

@@ -18,6 +18,7 @@ gastronomia_productor = Table(
 class TipoProductor(Base):
     __tablename__ = "tipo_productor"
     __table_args__ = {"schema": "catalogo"}
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), unique=True, nullable=False)
     descripcion = Column(Text)
@@ -25,6 +26,7 @@ class TipoProductor(Base):
 class Lengua(Base):
     __tablename__ = "lengua"
     __table_args__ = {"schema": "catalogo"}
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), unique=True, nullable=False)
     nombre_original = Column(String(100))
@@ -37,6 +39,7 @@ class Lengua(Base):
 class PuebloOriginario(Base):
     __tablename__ = "pueblo_originario"
     __table_args__ = {"schema": "catalogo"}
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(150), nullable=False)
     nombre_propio = Column(String(150))
@@ -49,6 +52,7 @@ class PuebloOriginario(Base):
 class ProductorUsuario(Base):
     __tablename__ = "productor_usuario"
     __table_args__ = {"schema": "social"}
+    
     productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE"), primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("sistema.usuario.id", ondelete="CASCADE"), nullable=False, unique=True)
     creado_en = Column(DateTime(timezone=True), server_default=text("now()"))

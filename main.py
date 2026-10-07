@@ -74,7 +74,7 @@ app.include_router(social_router, prefix="/social")
 app.include_router(agro_router, prefix="/agro")
 #, tags=["Agronómico"]
 
-#app.include_router(fenotipo_router, prefix="/fenotipo", tags=["Fenotipo"])
+app.include_router(fenotipo_router, prefix="/fenotipo", tags=["Fenotipo"])
 
 #app.include_router(trazabilidad_router, prefix="/trazabilidad", tags=["Trazabilidad"])
 

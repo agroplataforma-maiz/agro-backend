@@ -24,6 +24,7 @@ puede_capturar = requiere_rol(
     Rol.tecnico_campo
 )
 
+# LISTAR PRODUCTORES SOLO PARA PRUEBAS
 @router.get(
     "/lista",
     response_model=list[ProductorRespuesta]
@@ -40,6 +41,7 @@ def listar_productores(
 
     return productores
 
+# OBTENER VISUALIZADOR 
 
 @router.get("/usuarios-visualizadores")
 def obtener_visualizadores(
@@ -70,10 +72,7 @@ def obtener_visualizadores(
         }
         for usuario in usuarios
     ]
-
-# ============================================================
-# OBTENER UN VISUALIZADOR
-# ============================================================
+ 
 
 @router.get("/usuarios-visualizadores/{user_id}")
 def obtener_visualizador(
@@ -109,6 +108,8 @@ def obtener_visualizador(
         )
     }
 
+# VISUALIZADOR A PRODUCTOR
+
 @router.patch(
     "/usuarios-visualizadores/{user_id}",
     response_model=ProductorRespuesta
@@ -119,9 +120,6 @@ def actualizar_visualizador_a_productor(
     db: Session = Depends(get_db),
     usuario_actual=Depends(puede_capturar)
 ):
-    # ============================================================
-    # 1. BUSCAR USUARIO VISUALIZADOR
-    # ============================================================
 
     usuario = (
         db.query(Usuario)
@@ -139,9 +137,6 @@ def actualizar_visualizador_a_productor(
             detail="El usuario visualizador no existe o ya no está disponible"
         )
 
-    # ============================================================
-    # 2. COMPROBAR QUE NO TENGA PRODUCTOR
-    # ============================================================
 
     relacion_existente = (
         db.query(ProductorUsuario)
@@ -157,10 +152,6 @@ def actualizar_visualizador_a_productor(
             detail="El usuario ya está vinculado a un productor"
         )
 
-    # ============================================================
-    # 3. OBTENER DATOS EXISTENTES DEL USUARIO
-    # ============================================================
-
     nombre_completo = (usuario.nombre_completo or "").strip()
 
     if not nombre_completo:
@@ -170,10 +161,6 @@ def actualizar_visualizador_a_productor(
         )
 
     partes_nombre = nombre_completo.split()
-
-    # Usamos el primer elemento como nombre.
-    # Si existe un segundo, lo usamos como apellido paterno
-    # solamente si no se recibió uno en el PATCH.
 
     nombres = partes_nombre[0]
 
@@ -186,10 +173,6 @@ def actualizar_visualizador_a_productor(
 
     if not apellido_materno and len(partes_nombre) >= 3:
         apellido_materno = " ".join(partes_nombre[2:])
-
-    # ============================================================
-    # 4. CREAR PRODUCTOR CON DATOS EXISTENTES + NUEVOS
-    # ============================================================
 
     productor = Productor(
         nombres=nombres,
@@ -214,7 +197,6 @@ def actualizar_visualizador_a_productor(
 
         telefono=datos.telefono,
 
-        # El correo YA EXISTE en sistema.usuario
         correo_electronico=usuario.email,
 
         tipo_productor_id=datos.tipo_productor_id,
@@ -226,22 +208,10 @@ def actualizar_visualizador_a_productor(
 
     try:
 
-        # ========================================================
-        # 5. CREAR PRODUCTOR
-        # ========================================================
-
         db.add(productor)
         db.flush()
 
-        # ========================================================
-        # 6. CAMBIAR ROL DEL USUARIO
-        # ========================================================
-
         usuario.rol = Rol.productor
-
-        # ========================================================
-        # 7. CREAR RELACIÓN USUARIO → PRODUCTOR
-        # ========================================================
 
         relacion = ProductorUsuario(
             productor_id=productor.id,
@@ -249,11 +219,6 @@ def actualizar_visualizador_a_productor(
         )
 
         db.add(relacion)
-
-        # ========================================================
-        # 8. GUARDAR 
-        # ========================================================
-
         db.commit()
         db.refresh(productor)
 
@@ -270,7 +235,9 @@ def actualizar_visualizador_a_productor(
                 "en productor. Revisa los datos enviados."
             )
         )
-        
+
+# CREAR PRODUCTORES    
+
 @router.post(
     "",
     response_model=ProductorRespuesta,
@@ -291,10 +258,6 @@ def crear_productor(
     """
 
     usuario = None
-
-    # ============================================================
-    # 1. USUARIO EXISTENTE MEDIANTE user_id
-    # ============================================================
 
     if datos.user_id:
 
@@ -324,10 +287,6 @@ def crear_productor(
                 detail="Este usuario ya está vinculado a un productor"
             )
 
-    # ============================================================
-    # 2. CREAR CUENTA NUEVA
-    # ============================================================
-
     if datos.username or datos.password:
 
         if not datos.username or not datos.password:
@@ -341,10 +300,6 @@ def crear_productor(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El correo electrónico es obligatorio para crear la cuenta"
             )
-
-        # --------------------------------------------------------
-        # Comprobar username
-        # --------------------------------------------------------
 
         usuario_existente = (
             db.query(Usuario)
@@ -360,10 +315,6 @@ def crear_productor(
                 detail="El username ya está registrado"
             )
 
-        # --------------------------------------------------------
-        # Comprobar correo
-        # --------------------------------------------------------
-
         email_existente = (
             db.query(Usuario)
             .filter(
@@ -377,10 +328,6 @@ def crear_productor(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="El correo electrónico ya está registrado"
             )
-
-        # --------------------------------------------------------
-        # Crear usuario
-        # --------------------------------------------------------
 
         usuario = Usuario(
             username=datos.username,
@@ -397,10 +344,6 @@ def crear_productor(
 
         db.add(usuario)
         db.flush()
-
-    # ============================================================
-    # 3. CREAR PRODUCTOR
-    # ============================================================
 
     productor = Productor(
         nombres=datos.nombres,
@@ -433,16 +376,8 @@ def crear_productor(
 
     try:
 
-        # ========================================================
-        # 4. GUARDAR PRODUCTOR
-        # ========================================================
-
         db.add(productor)
         db.flush()
-
-        # ========================================================
-        # 5. VINCULAR USUARIO CON PRODUCTOR
-        # ========================================================
 
         if usuario:
 
@@ -452,10 +387,6 @@ def crear_productor(
             )
 
             db.add(relacion)
-
-        # ========================================================
-        # 6. CONFIRMAR TRANSACCIÓN
-        # ========================================================
 
         db.commit()
 

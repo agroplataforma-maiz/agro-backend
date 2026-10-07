@@ -79,3 +79,40 @@ class InvestigadorDisponibleRespuesta(BaseModel):
 
     class Config:
         from_attributes = True
+
+# =================== COMUNIDAD ===================
+
+class ComunidadBase(BaseModel):
+    nombre: str = Field(..., min_length=1, max_length=200)
+    nombre_lengua_orig: Optional[str] = None
+    tipo: Optional[str] = None
+    municipio_id: int
+    ubicacion_id: Optional[UUID] = None
+    presencia_maiz_nativo: bool = False
+    presencia_historica_maiz: bool = False
+    diversidad_ecologica_score: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=5
+    )
+    riqueza_cultural_score: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=5
+    )
+    prioridad_muestreo: str = "media"
+    poblacion_total: Optional[int] = None
+    num_localidades: Optional[int] = None
+    fuente: Optional[str] = "INEGI 2020"
+
+
+class ComunidadCrear(ComunidadBase):
+    pass
+
+
+class ComunidadRespuesta(ComunidadBase):
+    id: UUID
+    activo: bool
+
+    class Config:
+        from_attributes = True        

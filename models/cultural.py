@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 class TipoRitualAgricola(Base):
 	__tablename__ = "tipo_ritual_agricola"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(60), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -14,6 +15,7 @@ class TipoRitualAgricola(Base):
 class TipoNarrativaOral(Base):
 	__tablename__ = "tipo_narrativa_oral"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -23,6 +25,7 @@ class TipoNarrativaOral(Base):
 class CategoriaSaberAgricola(Base):
 	__tablename__ = "categoria_saber_agricola"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(80), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -32,6 +35,7 @@ class CategoriaSaberAgricola(Base):
 class Ocasion(Base):
 	__tablename__ = "ocasion"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(80), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -41,6 +45,7 @@ class Ocasion(Base):
 class MecanismoTransmision(Base):
 	__tablename__ = "mecanismo_transmision"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -51,6 +56,7 @@ class MecanismoTransmision(Base):
 class VinculoMaiz(Base):
 	__tablename__ = "vinculo_maiz"
 	__table_args__ = {"schema": "catalogo"}
+
 	id = Column(Integer, primary_key=True, index=True)
 	nombre = Column(String(50), unique=True, nullable=False)
 	descripcion = Column(Text)
@@ -61,6 +67,7 @@ class VinculoMaiz(Base):
 class SaberTradicional(Base):
     __tablename__ = "saber_tradicional"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     comunidad_id = Column(Integer, ForeignKey('catalogo.comunidad.id'))
@@ -88,6 +95,7 @@ class SaberTradicional(Base):
 class RitualAgricola(Base):
     __tablename__ = "ritual_agricola"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     comunidad_id = Column(Integer, ForeignKey('catalogo.comunidad.id'))
     nombre = Column(String(150), nullable=False)
@@ -115,8 +123,10 @@ class RitualAgricola(Base):
     updated_at = Column(TIMESTAMP)
 
 class NarrativaOral(Base):
+
     __tablename__ = "narrativa_oral"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     comunidad_id = Column(Integer, ForeignKey('catalogo.comunidad.id'))
     productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
@@ -146,6 +156,7 @@ class NarrativaOral(Base):
 class GastronomiaTradicional(Base):
     __tablename__ = "gastronomia_tradicional"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     comunidad_id = Column(Integer, ForeignKey('catalogo.comunidad.id'))
     nombre_platillo = Column(String(150), nullable=False)
@@ -159,6 +170,7 @@ class GastronomiaTradicional(Base):
 class TransmisionConocimiento(Base):
     __tablename__ = "transmision_conocimiento"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     # Agrega aquí los campos según el modelo
@@ -168,6 +180,7 @@ class TransmisionConocimiento(Base):
 class IdentidadCultural(Base):
     __tablename__ = "identidad_cultural"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     productor_id = Column(UUID(as_uuid=True), ForeignKey("core.productor.id", ondelete="CASCADE", onupdate="CASCADE"))
     # Agrega aquí los campos según el modelo
@@ -177,6 +190,7 @@ class IdentidadCultural(Base):
 class NombreLenguaOriginaria(Base):
     __tablename__ = "nombre_lengua_originaria"
     __table_args__ = {'schema': 'cultural'}
+
     id = Column(Integer, primary_key=True)
     # Agrega aquí los campos según el modelo
     created_at = Column(TIMESTAMP)
